@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- Tesseract.js para OCR de Imágenes (JPG, PNG, WEBP) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <style>
@@ -45,7 +43,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">Gestión de Cartera Pro</h1>
-                        <p class="text-slate-400 text-xs font-medium">Lector OCR de Facturas (Imágenes), Confirmación de Importación y Control de Cobros</p>
+                        <p class="text-slate-400 text-xs font-medium">Lector OCR de 3 Escenarios de Facturas, Historial Eliminable y Control de Cobros</p>
                     </div>
                 </div>
             </div>
@@ -54,7 +52,7 @@
                 <!-- BOTÓN CARGAR FACTURAS -->
                 <button onclick="abrirModalFacturas()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-amber-900/30 active:scale-95">
                     <i class="fa-solid fa-file-invoice-dollar text-sm"></i>
-                    <span>Cargar Facturas / Imagen</span>
+                    <span>Cargar Factura / Foto</span>
                 </button>
 
                 <!-- BOTÓN IMPORTAR PLANILLA EXCEL -->
@@ -166,17 +164,17 @@
 
     </div>
 
-    <!-- Modal Cargar Facturas (Soporta Imágenes OCR e Individuales) -->
+    <!-- Modal Cargar Facturas (3 Escenarios + OCR + Previsualización) -->
     <div id="modalFacturas" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-        <div class="glass-card bg-slate-900/95 border border-slate-700/80 p-6 rounded-3xl max-w-lg w-full shadow-2xl space-y-5">
+        <div class="glass-card bg-slate-900/95 border border-slate-700/80 p-6 rounded-3xl max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white">Cargar Factura(s) / Imagen</h3>
-                        <p class="text-xs text-slate-400">Escaneo de imagen con OCR o asignación directa</p>
+                        <h3 class="text-base font-bold text-white">Procesador de Factura(s)</h3>
+                        <p class="text-xs text-slate-400">Escaneo de foto u opción manual para los 3 escenarios</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalFacturas()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition text-xs">
@@ -184,53 +182,87 @@
                 </button>
             </div>
 
-            <!-- Buscador y Selector Inteligente de Cliente con Autocompletado -->
-            <div class="space-y-1.5">
-                <label class="block text-[11px] font-bold uppercase text-slate-300">🔍 Buscar y Seleccionar Cliente</label>
-                <div class="relative">
-                    <i class="fa-solid fa-user-tag absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                    <input type="text" id="inputBuscarClienteFactura" oninput="filtrarDropdownClienteFactura()" placeholder="Escribe el nombre del cliente..." class="w-full bg-slate-950 text-amber-400 font-bold text-xs pl-9 pr-4 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                </div>
-                <select id="selectFacturaCliente" size="4" class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-xl border border-slate-800 focus:outline-none custom-scrollbar">
-                </select>
-            </div>
-
-            <!-- Opción para Subir Imagen de Factura (OCR) -->
+            <!-- Paso 1: Subir Foto OCR o Seleccionar Cliente -->
             <div class="p-3.5 bg-amber-950/20 border border-amber-800/40 rounded-2xl space-y-2">
-                <span class="text-[11px] font-bold text-amber-300 block uppercase tracking-wider">📷 Subir Foto o Imagen de la Factura (OCR)</span>
-                <label class="cursor-pointer border border-dashed border-amber-500/50 hover:border-amber-400 p-3 rounded-xl flex items-center justify-center gap-2 bg-slate-950/60 transition">
+                <span class="text-[11px] font-bold text-amber-300 block uppercase tracking-wider">📷 Subir Foto de la Factura (Escaneo OCR)</span>
+                <label class="cursor-pointer border border-dashed border-amber-500/50 hover:border-amber-400 p-2.5 rounded-xl flex items-center justify-center gap-2 bg-slate-950/60 transition">
                     <i class="fa-solid fa-camera text-amber-400"></i>
-                    <span class="text-xs font-bold text-slate-300" id="lblImagenFactura">Seleccionar Imagen (JPG, PNG, WEBP)</span>
+                    <span class="text-xs font-bold text-slate-300" id="lblImagenFactura">Seleccionar Foto (JPG, PNG, WEBP)</span>
                     <input type="file" id="inputFacturaImagen" accept="image/*" class="hidden" onchange="procesarImagenOCR(event)">
                 </label>
                 <p id="statusOCR" class="text-[10px] text-amber-400/80 font-semibold hidden flex items-center gap-1.5">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> Escaneando y analizando texto de la imagen...
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Escaneando foto y reconociendo cliente / montos...
                 </p>
             </div>
 
-            <!-- Campos de la Factura -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[11px] font-bold uppercase text-slate-300 mb-1">Monto Factura (COP)</label>
-                    <input type="number" id="inputFacturaMonto" placeholder="Ej: 350000" class="w-full bg-slate-950 text-amber-400 font-bold text-sm p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+            <!-- Buscador y Selector de Cliente -->
+            <div class="space-y-1">
+                <label class="block text-[10px] font-bold uppercase text-slate-300">🔍 Confirmar o Buscar Cliente</label>
+                <div class="relative">
+                    <i class="fa-solid fa-user-tag absolute left-3.5 top-2.5 text-slate-500 text-xs"></i>
+                    <input type="text" id="inputBuscarClienteFactura" oninput="filtrarDropdownClienteFactura()" placeholder="Escribe el nombre del cliente..." class="w-full bg-slate-950 text-amber-400 font-bold text-xs pl-9 pr-4 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
                 </div>
-                <div>
-                    <label class="block text-[11px] font-bold uppercase text-slate-300 mb-1">Fecha Factura</label>
-                    <input type="date" id="inputFacturaFecha" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                </div>
-            </div>
-            <div>
-                <label class="block text-[11px] font-bold uppercase text-slate-300 mb-1">N° Factura / Alegra (Opcional)</label>
-                <input type="text" id="inputFacturaNum" placeholder="Ej: Factura A10084" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                <select id="selectFacturaCliente" size="3" onchange="recalcularPreviewFactura()" class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-xl border border-slate-800 focus:outline-none custom-scrollbar">
+                </select>
             </div>
 
-            <button onclick="procesarFacturaIndividual()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl text-xs font-bold transition shadow-lg shadow-amber-900/40 active:scale-95">
-                Procesar Factura e Incrementar Saldo
+            <!-- Paso 2: Selección del Tipo de Factura / Escenario -->
+            <div class="space-y-1">
+                <label class="block text-[10px] font-bold uppercase text-amber-400">⚙️ Tipo de Factura / Operación</label>
+                <select id="selectTipoEscenarioFactura" onchange="actualizarCamposEscenario(); recalcularPreviewFactura();" class="w-full bg-slate-950 text-slate-100 text-xs p-2.5 rounded-xl border border-slate-800 font-bold focus:outline-none focus:border-amber-500">
+                    <option value="SOLO_ABONO">1. 🟢 Solo Abono (El cliente paga un valor y reduce su saldo)</option>
+                    <option value="SOLO_COMPRA">2. 🟠 Solo Compra / Nueva Factura (Incrementa el saldo del cliente)</option>
+                    <option value="COMPRA_Y_ABONO">3. 🔵 Compra + Abono Simultáneo (Factura nueva con abono inmediato)</option>
+                </select>
+            </div>
+
+            <!-- Campos Dinámicos según Escenario -->
+            <div class="grid grid-cols-2 gap-3">
+                <div id="boxMontoCompra">
+                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Monto Compra (COP)</label>
+                    <input type="number" id="inputFacturaMontoCompra" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-amber-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                </div>
+                <div id="boxMontoAbono">
+                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Monto Abono (COP)</label>
+                    <input type="number" id="inputFacturaMontoAbono" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-emerald-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Fecha Movimiento</label>
+                    <input type="date" id="inputFacturaFecha" onchange="recalcularPreviewFactura()" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">N° Factura / Alegra (Opcional)</label>
+                    <input type="text" id="inputFacturaNum" placeholder="Ej: Factura A10084" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+
+            <!-- Cuadro de Previsualización en Tiempo Real -->
+            <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl text-xs space-y-1">
+                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">📊 Previsualización del Saldo Resultante:</span>
+                <div class="flex justify-between text-slate-400">
+                    <span>Saldo Anterior:</span>
+                    <span id="prevSaldoAnterior" class="font-semibold text-white">$0</span>
+                </div>
+                <div class="flex justify-between text-slate-400">
+                    <span>Impacto Operación:</span>
+                    <span id="prevImpacto" class="font-semibold text-emerald-400">$0</span>
+                </div>
+                <div class="flex justify-between text-slate-300 font-bold border-t border-slate-800/80 pt-1">
+                    <span>NUEVO SALDO QUE QUEDARÁ:</span>
+                    <span id="prevSaldoNuevo" class="text-amber-400 text-sm font-extrabold">$0</span>
+                </div>
+            </div>
+
+            <button onclick="confirmarYAplicarFactura()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl text-xs font-bold transition shadow-lg shadow-amber-900/40 active:scale-95">
+                Confirmar y Actualizar Cliente
             </button>
         </div>
     </div>
 
-    <!-- Modal PREVISUALIZACIÓN Y CONFIRMACIÓN DE IMPORTACIÓN EXCEL -->
+    <!-- Modal Previsualización Planilla General -->
     <div id="modalConfirmarImportacion" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
         <div class="glass-card bg-slate-900 border border-slate-700/80 p-6 rounded-3xl max-w-4xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -248,7 +280,6 @@
                 </button>
             </div>
 
-            <!-- Tabla de Vista Previa -->
             <div class="overflow-x-auto custom-scrollbar flex-1 border border-slate-800 rounded-2xl">
                 <table class="w-full text-left text-xs text-slate-300 border-collapse">
                     <thead class="bg-slate-950 text-[10px] uppercase text-slate-400 sticky top-0 border-b border-slate-800">
@@ -279,7 +310,7 @@
         </div>
     </div>
 
-    <!-- Modal RESUMEN FINAL DE IMPORTACIÓN -->
+    <!-- Modal Resumen Final Importación -->
     <div id="modalResultadoImportacion" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
         <div class="glass-card bg-slate-900 border border-slate-700/80 p-6 rounded-3xl max-w-2xl w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
             <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
@@ -313,9 +344,9 @@
         </div>
     </div>
 
-    <!-- Modal emergente para Gestionar Cliente completo -->
+    <!-- Modal Gestionar Cliente e HISTORIAL COMPLETO DE MOVIMIENTOS ELIMINABLES -->
     <div id="modalAbono" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50 transition-all">
-        <div class="glass-card bg-slate-900/95 border border-slate-700/60 p-6 rounded-3xl max-w-lg w-full shadow-2xl space-y-5">
+        <div class="glass-card bg-slate-900/95 border border-slate-700/60 p-6 rounded-3xl max-w-lg w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
@@ -382,15 +413,10 @@
                     </div>
                 </div>
 
-                <div id="seccionDeshacer" class="hidden pt-1 border-t border-slate-800">
-                    <div class="flex items-center justify-between p-2 bg-rose-950/20 border border-rose-900/40 rounded-xl text-xs">
-                        <div>
-                            <span class="text-xs font-bold text-rose-300 block">¿Revertir abono reciente?</span>
-                            <span id="textUltimoPago" class="text-[10px] text-rose-400/80"></span>
-                        </div>
-                        <button onclick="eliminarUltimoAbono()" class="bg-rose-600 hover:bg-rose-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
-                            <i class="fa-solid fa-trash-can text-xs"></i> Eliminar
-                        </button>
+                <!-- HISTORIAL DETALLADO DE MOVIMIENTOS CON BOTÓN ELIMINAR CADA UNO -->
+                <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2">
+                    <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">📜 Historial de Movimientos Registrados</span>
+                    <div id="listaHistorialMovimientos" class="space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar">
                     </div>
                 </div>
             </div>
@@ -508,13 +534,13 @@
             localStorage.removeItem('cartera_db_v4');
             localStorage.removeItem('cartera_db_v5');
 
-            const guardado = localStorage.getItem('cartera_db_v9');
+            const guardado = localStorage.getItem('cartera_db_v10');
             if (guardado) {
                 clientes = JSON.parse(guardado);
             } else {
                 clientes = JSON.parse(JSON.stringify(baseInicial));
                 clientes.forEach(c => {
-                    if (!c.historialPagos) c.historialPagos = [];
+                    if (!c.historialMovimientos) c.historialMovimientos = [];
                     if (!c.acuerdoFecha) c.acuerdoFecha = "";
                     if (!c.acuerdoNota) c.acuerdoNota = "";
                 });
@@ -528,12 +554,14 @@
             const select = document.getElementById('selectFacturaCliente');
             if (!select) return;
             select.innerHTML = '';
-            clientes.forEach(c => {
+            clientes.forEach((c, idx) => {
                 const opt = document.createElement('option');
                 opt.value = c.id;
-                opt.innerText = `${c.cliente} (Saldo: ${fmt(c.saldo)})`;
+                opt.innerText = `${c.cliente} (Saldo actual: ${fmt(c.saldo)})`;
+                if (idx === 0) opt.selected = true;
                 select.appendChild(opt);
             });
+            recalcularPreviewFactura();
         }
 
         function filtrarDropdownClienteFactura() {
@@ -545,14 +573,16 @@
             filtrados.forEach((c, idx) => {
                 const opt = document.createElement('option');
                 opt.value = c.id;
-                opt.innerText = `${c.cliente} (Saldo: ${fmt(c.saldo)})`;
+                opt.innerText = `${c.cliente} (Saldo actual: ${fmt(c.saldo)})`;
                 if (idx === 0) opt.selected = true;
                 select.appendChild(opt);
             });
+            recalcularPreviewFactura();
         }
 
         function abrirModalFacturas() {
             poblarSelectClientesFactura();
+            actualizarCamposEscenario();
             document.getElementById('modalFacturas').classList.remove('hidden');
         }
 
@@ -560,11 +590,59 @@
             document.getElementById('modalFacturas').classList.add('hidden');
         }
 
+        function actualizarCamposEscenario() {
+            const escenario = document.getElementById('selectTipoEscenarioFactura').value;
+            const boxCompra = document.getElementById('boxMontoCompra');
+            const boxAbono = document.getElementById('boxMontoAbono');
+
+            if (escenario === 'SOLO_ABONO') {
+                boxCompra.classList.add('hidden');
+                boxAbono.classList.remove('hidden');
+                document.getElementById('inputFacturaMontoCompra').value = 0;
+            } else if (escenario === 'SOLO_COMPRA') {
+                boxCompra.classList.remove('hidden');
+                boxAbono.classList.add('hidden');
+                document.getElementById('inputFacturaMontoAbono').value = 0;
+            } else { // COMPRA_Y_ABONO
+                boxCompra.classList.remove('hidden');
+                boxAbono.classList.remove('hidden');
+            }
+        }
+
+        function recalcularPreviewFactura() {
+            const selectVal = document.getElementById('selectFacturaCliente').value;
+            if (!selectVal) return;
+            const id = parseInt(selectVal);
+            const c = clientes.find(item => item.id === id);
+            if (!c) return;
+
+            const escenario = document.getElementById('selectTipoEscenarioFactura').value;
+            const montoCompra = parseFloat(document.getElementById('inputFacturaMontoCompra').value) || 0;
+            const montoAbono = parseFloat(document.getElementById('inputFacturaMontoAbono').value) || 0;
+
+            let saldoAnterior = c.saldo;
+            let impacto = 0;
+
+            if (escenario === 'SOLO_ABONO') {
+                impacto = -montoAbono;
+            } else if (escenario === 'SOLO_COMPRA') {
+                impacto = montoCompra;
+            } else {
+                impacto = montoCompra - montoAbono;
+            }
+
+            let saldoNuevo = Math.max(0, saldoAnterior + impacto);
+
+            document.getElementById('prevSaldoAnterior').innerText = fmt(saldoAnterior);
+            document.getElementById('prevImpacto').innerText = (impacto >= 0 ? "+" : "") + fmt(impacto);
+            document.getElementById('prevSaldoNuevo').innerText = fmt(saldoNuevo);
+        }
+
         function procesarImagenOCR(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            document.getElementById('lblImagenFactura').innerText = `Imagen cargada: ${file.name}`;
+            document.getElementById('lblImagenFactura').innerText = `Foto cargada: ${file.name}`;
             const statusOCR = document.getElementById('statusOCR');
             statusOCR.classList.remove('hidden');
 
@@ -572,7 +650,21 @@
                 logger: m => console.log(m)
             }).then(({ data: { text } }) => {
                 statusOCR.classList.add('hidden');
-                console.log("Texto extraído de factura:", text);
+                console.log("Texto extraído de foto:", text);
+
+                const textUpper = text.toUpperCase();
+                let clienteEncontrado = null;
+
+                clientes.forEach(c => {
+                    if (textUpper.includes(c.cliente.toUpperCase())) {
+                        clienteEncontrado = c;
+                    }
+                });
+
+                if (clienteEncontrado) {
+                    document.getElementById('inputBuscarClienteFactura').value = clienteEncontrado.cliente;
+                    filtrarDropdownClienteFactura();
+                }
 
                 const matches = text.match(/\$?(\d{1,3}(\.\d{3})*|\d{4,7})/g);
                 if (matches && matches.length > 0) {
@@ -583,45 +675,38 @@
                         if (!isNaN(num) && num > maxVal && num < 100000000) maxVal = num;
                     });
                     if (maxVal > 0) {
-                        document.getElementById('inputFacturaMonto').value = maxVal;
+                        const escenario = document.getElementById('selectTipoEscenarioFactura').value;
+                        if (escenario === 'SOLO_ABONO') {
+                            document.getElementById('inputFacturaMontoAbono').value = maxVal;
+                        } else {
+                            document.getElementById('inputFacturaMontoCompra').value = maxVal;
+                        }
                     }
                 }
 
-                const textUpper = text.toUpperCase();
-                clientes.forEach(c => {
-                    if (textUpper.includes(c.cliente.toUpperCase())) {
-                        const select = document.getElementById('selectFacturaCliente');
-                        select.value = c.id;
-                    }
-                });
-
-                alert("📷 Foto escaneada con éxito. Revisa el monto y cliente autocompletados.");
+                recalcularPreviewFactura();
+                alert("📷 Foto analizada con éxito. Revisa el cliente y montos sugeridos.");
             }).catch(err => {
                 statusOCR.classList.add('hidden');
-                alert("No se pudo escanear el texto de la imagen automáticamente, pero puedes digitar el monto manualmente.");
+                alert("No se pudo extraer texto de la foto automáticamente, pero puedes seleccionar el cliente y monto manualmente.");
             });
         }
 
-        function procesarFacturaIndividual() {
-            const select = document.getElementById('selectFacturaCliente');
-            if (!select.value) {
+        function confirmarYAplicarFactura() {
+            const selectVal = document.getElementById('selectFacturaCliente').value;
+            if (!selectVal) {
                 alert("Por favor selecciona un cliente");
                 return;
             }
-            const id = parseInt(select.value);
-            const monto = parseFloat(document.getElementById('inputFacturaMonto').value);
-            const fechaVal = document.getElementById('inputFacturaFecha').value;
-            const numFactura = document.getElementById('inputFacturaNum').value;
-
-            if (!monto || monto <= 0) {
-                alert("Por favor ingresa un monto de factura válido mayor a $0");
-                return;
-            }
-
+            const id = parseInt(selectVal);
             const c = clientes.find(item => item.id === id);
             if (!c) return;
 
-            c.saldo += monto;
+            const escenario = document.getElementById('selectTipoEscenarioFactura').value;
+            const montoCompra = parseFloat(document.getElementById('inputFacturaMontoCompra').value) || 0;
+            const montoAbono = parseFloat(document.getElementById('inputFacturaMontoAbono').value) || 0;
+            const fechaVal = document.getElementById('inputFacturaFecha').value;
+            const numFactura = document.getElementById('inputFacturaNum').value;
 
             let fechaStr = formatFechaObj(new Date());
             if (fechaVal) {
@@ -629,17 +714,50 @@
                 if (p.length === 3) fechaStr = `${p[2]}/${p[1]}/${p[0]}`;
             }
 
-            c.ultimaCompra = fechaStr;
-            if (numFactura) {
-                c.observaciones = (c.observaciones ? c.observaciones + " | " : "") + `Factura: ${numFactura} (${fmt(monto)})`;
+            const saldoAnterior = c.saldo;
+            const abonadoAnterior = c.abonado;
+
+            if (escenario === 'SOLO_ABONO') {
+                if (montoAbono <= 0) { alert("Ingresa un monto de abono mayor a $0"); return; }
+                c.saldo = Math.max(0, c.saldo - montoAbono);
+                c.abonado += montoAbono;
+                c.ultimoAbono = fechaStr;
+            } else if (escenario === 'SOLO_COMPRA') {
+                if (montoCompra <= 0) { alert("Ingresa un monto de compra mayor a $0"); return; }
+                c.saldo += montoCompra;
+                c.ultimaCompra = fechaStr;
+            } else { // COMPRA_Y_ABONO
+                if (montoCompra <= 0) { alert("Ingresa un monto de compra mayor a $0"); return; }
+                c.saldo = Math.max(0, c.saldo + montoCompra - montoAbono);
+                c.abonado += montoAbono;
+                c.ultimaCompra = fechaStr;
+                if (montoAbono > 0) c.ultimoAbono = fechaStr;
             }
 
-            localStorage.setItem('cartera_db_v9', JSON.stringify(clientes));
+            if (numFactura) {
+                c.observaciones = (c.observaciones ? c.observaciones + " | " : "") + `Factura: ${numFactura}`;
+            }
+
+            if (!c.historialMovimientos) c.historialMovimientos = [];
+            c.historialMovimientos.push({
+                id: Date.now(),
+                tipo: escenario,
+                montoCompra: montoCompra,
+                montoAbono: montoAbono,
+                saldoAnterior: saldoAnterior,
+                saldoNuevo: c.saldo,
+                abonadoAnterior: abonadoAnterior,
+                abonadoNuevo: c.abonado,
+                fecha: fechaStr,
+                detalle: numFactura ? `Factura #${numFactura}` : "Factura / Transacción"
+            });
+
+            localStorage.setItem('cartera_db_v10', JSON.stringify(clientes));
 
             cerrarModalFacturas();
             renderTabla();
             actualizarMetricas();
-            alert(`✅ Factura agregada con éxito a ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
+            alert(`✅ Factura procesada correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
         }
 
         function prepararPrevisualizacionExcel(event) {
@@ -655,10 +773,7 @@
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-                if (jsonRows.length < 2) {
-                    alert("El archivo parece estar vacío");
-                    return;
-                }
+                if (jsonRows.length < 2) { alert("Planilla vacía"); return; }
 
                 let colFecha = -1, colCliente = -1, colCompra = -1, colAbono = -1, colSaldoActual = -1;
                 
@@ -774,22 +889,36 @@
             const tbodyFinal = document.getElementById('tbodyResumenFinal');
             tbodyFinal.innerHTML = '';
 
-            let actualizados = 0;
-
             listaCambiosPendientesImportacion.forEach(item => {
                 if (item.targetClient) {
-                    actualizados++;
+                    const saldoAnt = item.targetClient.saldo;
+                    const abonadoAnt = item.targetClient.abonado;
+
                     item.targetClient.saldo = item.saldoNuevo;
                     if (item.abonoNum > 0) {
                         item.targetClient.abonado += item.abonoNum;
                         if (item.fecha) item.targetClient.ultimoAbono = item.fecha;
                     }
 
+                    if (!item.targetClient.historialMovimientos) item.targetClient.historialMovimientos = [];
+                    item.targetClient.historialMovimientos.push({
+                        id: Date.now() + Math.random(),
+                        tipo: "IMPORTACION_PLANILLA",
+                        montoCompra: 0,
+                        montoAbono: item.abonoNum,
+                        saldoAnterior: saldoAnt,
+                        saldoNuevo: item.saldoNuevo,
+                        abonadoAnterior: abonadoAnt,
+                        abonadoNuevo: item.targetClient.abonado,
+                        fecha: item.fecha || formatFechaObj(new Date()),
+                        detalle: "Importación Planilla General"
+                    });
+
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-slate-800/40";
                     tr.innerHTML = `
                         <td class="p-3 font-bold text-white">${item.targetClient.cliente}</td>
-                        <td class="p-3 text-right font-semibold text-slate-400">${fmt(item.saldoAnterior)}</td>
+                        <td class="p-3 text-right font-semibold text-slate-400">${fmt(saldoAnt)}</td>
                         <td class="p-3 text-right font-bold text-emerald-400">${fmt(item.abonoNum)}</td>
                         <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoNuevo)}</td>
                     `;
@@ -797,7 +926,7 @@
                 }
             });
 
-            localStorage.setItem('cartera_db_v9', JSON.stringify(clientes));
+            localStorage.setItem('cartera_db_v10', JSON.stringify(clientes));
 
             document.getElementById('modalResultadoImportacion').classList.remove('hidden');
             renderTabla();
@@ -918,16 +1047,61 @@
                 document.getElementById('inputFechaCompra').value = `${yyyy}-${mm}-${dd}`;
             } else { document.getElementById('inputFechaCompra').value = ''; }
 
-            const seccionDeshacer = document.getElementById('seccionDeshacer');
-            if (c.historialPagos && c.historialPagos.length > 0) {
-                const ultimo = c.historialPagos[c.historialPagos.length - 1];
-                document.getElementById('textUltimoPago').innerText = `Último abono: ${fmt(ultimo.monto)} (${ultimo.fecha})`;
-                seccionDeshacer.classList.remove('hidden');
-            } else {
-                seccionDeshacer.classList.add('hidden');
-            }
+            renderizarHistorialMovimientosCliente(c);
 
             document.getElementById('modalAbono').classList.remove('hidden');
+        }
+
+        function renderizarHistorialMovimientosCliente(c) {
+            const divHistorial = document.getElementById('listaHistorialMovimientos');
+            divHistorial.innerHTML = '';
+
+            if (!c.historialMovimientos || c.historialMovimientos.length === 0) {
+                divHistorial.innerHTML = `<span class="text-[10px] text-slate-500 italic block p-1">No hay movimientos recientes registrados</span>`;
+                return;
+            }
+
+            c.historialMovimientos.forEach(mov => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "flex items-center justify-between p-2 bg-slate-900 border border-slate-800 rounded-xl text-[11px]";
+                
+                let desc = mov.detalle || "Movimiento";
+                let montoStr = mov.montoAbono > 0 ? `Abonó: ${fmt(mov.montoAbono)}` : `Compra: ${fmt(mov.montoCompra)}`;
+
+                itemDiv.innerHTML = `
+                    <div>
+                        <span class="font-bold text-white block">${desc}</span>
+                        <span class="text-[10px] text-indigo-400">${montoStr} (${mov.fecha})</span>
+                    </div>
+                    <button onclick="eliminarMovimientoHistorial(${mov.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 active:scale-95">
+                        <i class="fa-solid fa-trash-can"></i> Revertir
+                    </button>
+                `;
+                divHistorial.appendChild(itemDiv);
+            });
+        }
+
+        function eliminarMovimientoHistorial(movId) {
+            const c = clientes.find(item => item.id === clienteSeleccionadoId);
+            if (!c || !c.historialMovimientos) return;
+
+            const idx = c.historialMovimientos.findIndex(m => m.id === movId);
+            if (idx === -1) return;
+
+            if (confirm("¿Seguro que deseas eliminar y revertir este movimiento del historial de este cliente?")) {
+                const mov = c.historialMovimientos[idx];
+                c.saldo = mov.saldoAnterior;
+                c.abonado = mov.abonadoAnterior;
+
+                c.historialMovimientos.splice(idx, 1);
+                localStorage.setItem('cartera_db_v10', JSON.stringify(clientes));
+
+                document.getElementById('inputSaldoActualEditar').value = c.saldo;
+                document.getElementById('inputTotalAbonadoEditar').value = c.abonado;
+                renderizarHistorialMovimientosCliente(c);
+                renderTabla();
+                actualizarMetricas();
+            }
         }
 
         function cerrarModal() { document.getElementById('modalAbono').classList.add('hidden'); }
@@ -942,23 +1116,31 @@
             if (!isNaN(nuevoAbonadoInput) && nuevoAbonadoInput >= 0) { c.abonado = nuevoAbonadoInput; }
 
             const monto = parseFloat(document.getElementById('inputMontoAbono').value);
-            if (!c.historialPagos) c.historialPagos = [];
+            if (!c.historialMovimientos) c.historialMovimientos = [];
 
             const hoy = new Date();
             const fechaHoy = formatFechaObj(hoy);
 
             if (monto && monto > 0) {
-                c.historialPagos.push({
-                    monto: monto,
-                    saldoAnterior: c.saldo,
-                    abonadoAnterior: c.abonado,
-                    ultimoAbonoAnterior: c.ultimoAbono,
-                    fecha: fechaHoy
-                });
+                const saldoAnt = c.saldo;
+                const abonadoAnt = c.abonado;
 
                 c.saldo = Math.max(0, c.saldo - monto);
                 c.abonado += monto;
                 c.ultimoAbono = fechaHoy;
+
+                c.historialMovimientos.push({
+                    id: Date.now(),
+                    tipo: "ABONO_MANUAL",
+                    montoCompra: 0,
+                    montoAbono: monto,
+                    saldoAnterior: saldoAnt,
+                    saldoNuevo: c.saldo,
+                    abonadoAnterior: abonadoAnt,
+                    abonadoNuevo: c.abonado,
+                    fecha: fechaHoy,
+                    detalle: "Abono Manual"
+                });
             }
 
             const inputFAcuerdo = document.getElementById('inputFechaAcuerdo').value;
@@ -980,30 +1162,11 @@
                 if (partes.length === 3) { c.ultimaCompra = `${partes[2]}/${partes[1]}/${partes[0]}`; }
             }
 
-            localStorage.setItem('cartera_db_v9', JSON.stringify(clientes));
+            localStorage.setItem('cartera_db_v10', JSON.stringify(clientes));
 
             cerrarModal();
             renderTabla();
             actualizarMetricas();
-        }
-
-        function eliminarUltimoAbono() {
-            const c = clientes.find(item => item.id === clienteSeleccionadoId);
-            if (!c.historialPagos || c.historialPagos.length === 0) return;
-
-            if (confirm(`¿Seguro que deseas eliminar y revertir el último abono de este cliente?`)) {
-                const ultimo = c.historialPagos.pop();
-                
-                c.saldo = ultimo.saldoAnterior;
-                c.abonado = ultimo.abonadoAnterior;
-                c.ultimoAbono = ultimo.ultimoAbonoAnterior;
-
-                localStorage.setItem('cartera_db_v9', JSON.stringify(clientes));
-
-                cerrarModal();
-                renderTabla();
-                actualizarMetricas();
-            }
         }
 
         function exportarExcelOficial() {
@@ -1068,7 +1231,7 @@
 
         function reiniciarBaseDatos() {
             if(confirm("¿Seguro que deseas restablecer los datos al estado original importado?")) {
-                localStorage.removeItem('cartera_db_v9');
+                localStorage.removeItem('cartera_db_v10');
                 cargarDatos();
             }
         }
