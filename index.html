@@ -85,9 +85,9 @@
                     <span>Reset Base Oficial</span>
                 </button>
 
-                <button onclick="exportarExcelOficial()" class="bg-emerald-600/90 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-emerald-900/30 active:scale-95">
+                <button onclick="exportarExcelOficial()" class="bg-emerald-600/90 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-emerald-900/30 active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-file-excel text-sm"></i>
-                    <span>Exportar Excel</span>
+                    <span>Exportar Excel (.xlsx)</span>
                 </button>
             </div>
         </div>
@@ -709,7 +709,7 @@
         function cargarDatos() {
             aplicarPermisosVisuales();
 
-            const guardado = localStorage.getItem('cartera_db_v20');
+            const guardado = localStorage.getItem('cartera_db_v21');
             if (guardado) {
                 clientes = JSON.parse(guardado);
             } else {
@@ -724,7 +724,7 @@
                 db.collection("cartera").doc("general").onSnapshot((doc) => {
                     if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
-                        localStorage.setItem('cartera_db_v20', JSON.stringify(clientes));
+                        localStorage.setItem('cartera_db_v21', JSON.stringify(clientes));
                         renderTabla();
                         actualizarMetricas();
                         renderizarTareasWidgetHoy();
@@ -738,7 +738,7 @@
         }
 
         function guardarEnNube() {
-            localStorage.setItem('cartera_db_v20', JSON.stringify(clientes));
+            localStorage.setItem('cartera_db_v21', JSON.stringify(clientes));
             if (db) {
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
@@ -751,8 +751,8 @@
             if (!esModoAdmin) return;
             if (confirm("⚠️ ¿Deseas restablecer la base de datos oficial completa ($145.845.538) y limpiar la Nube?")) {
                 clientes = JSON.parse(JSON.stringify(baseInicial));
-                for(let i=11; i<=20; i++) { localStorage.removeItem('cartera_db_v'+i); }
-                localStorage.setItem('cartera_db_v20', JSON.stringify(clientes));
+                for(let i=11; i<=21; i++) { localStorage.removeItem('cartera_db_v'+i); }
+                localStorage.setItem('cartera_db_v21', JSON.stringify(clientes));
 
                 if (db) {
                     db.collection("cartera").doc("general").set({
@@ -1623,7 +1623,6 @@
                     if (abonosRestantes.length > 0) {
                         c.ultimoAbono = abonosRestantes[abonosRestantes.length - 1].fecha || "";
                     } else {
-                        // Si ya no quedan abonos en historial, busca en base inicial o borra
                         const baseObj = baseInicial.find(b => b.id === c.id);
                         c.ultimoAbono = baseObj ? baseObj.ultimoAbono : "";
                     }
@@ -1733,64 +1732,51 @@
             cerrarModal();
         }
 
+        // EXPORTACIÓN NATIVA A EXCEL DE ALTA VELOCIDAD Y COMPATIBILIDAD SIN BLOQUEO DE URL
         function exportarExcelOficial() {
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            
-            const headers = [
-                "CLIENTES", "VALOR A COBRAR", "Mensaje Enviado", "RECONOCIMIENTO DE LA DEUDA",
-                "REALIZA ACUERDO DE PAGO", "CAUSA DE NO PAGO", "VALOR ABONADO", "FECHA ACUERDO DE PRIMER ABONO",
-                "RECUPERACION DE CARTERA", "FECHA ULTIMO ABONO O COMPRA", "OBSERVACIONES", "NOTA ACUERDO DE PAGO"
-            ];
+            try {
+                const dataExport = clientes.map(c => {
+                    const hasAbono = c.abonado > 0;
+                    const totalDeuda = c.saldo + c.abonado;
+                    const pctNum = totalDeuda > 0 ? ((c.abonado / totalDeuda) * 100).toFixed(2) : "0";
+                    const pctStr = pctNum.replace('.', ',') + "%";
 
-            csvContent += headers.map(h => `"${h}"`).join(",") + "\n";
+                    const info = obtenerInfoCobro(c);
+                    let valFechaAcuerdo = "Cobrar Nuevamente";
+                    if (c.sinRespuesta) {
+                        valFechaAcuerdo = `Reescribir en 5 días (${c.acuerdoFecha})`;
+                    } else if (c.acuerdoFecha) {
+                        valFechaAcuerdo = `Acuerdo: ${c.acuerdoFecha}`;
+                    } else if (info.fechaReferencia && info.difDias <= 15) {
+                        valFechaAcuerdo = `Cobrar en 8 días (${info.strProxima})`;
+                    } else if (info.esCompra) {
+                        valFechaAcuerdo = "Cobrar (Compró)";
+                    }
 
-            clientes.forEach(c => {
-                const hasAbono = c.abonado > 0;
-                const totalDeuda = c.saldo + c.abonado;
-                const pctNum = totalDeuda > 0 ? ((c.abonado / totalDeuda) * 100).toFixed(2) : 0;
-                const pctStr = pctNum.toString().replace('.', ',') + "%";
+                    return {
+                        "CLIENTES": c.cliente,
+                        "VALOR A COBRAR": c.saldo,
+                        "Mensaje Enviado": hasAbono ? "OK" : (c.sinRespuesta ? "Sin Respuesta" : "Escribio"),
+                        "RECONOCIMIENTO DE LA DEUDA": "SI",
+                        "REALIZA ACUERDO DE PAGO": c.acuerdoFecha ? `SI (${c.acuerdoFecha})` : "SI/PEN",
+                        "CAUSA DE NO PAGO": hasAbono ? "N/A" : "DEFINIR",
+                        "VALOR ABONADO": c.abonado,
+                        "FECHA ACUERDO DE PRIMER ABONO": valFechaAcuerdo,
+                        "RECUPERACION DE CARTERA": pctStr,
+                        "FECHA ULTIMO ABONO O COMPRA": c.ultimoAbono || c.ultimaCompra || "",
+                        "OBSERVACIONES": c.observaciones || "",
+                        "NOTA ACUERDO DE PAGO": c.acuerdoNota || ""
+                    };
+                });
 
-                const valCliente = c.cliente;
-                const valCobrar = fmtMonedaExcel(c.saldo);
-                const valMensaje = hasAbono ? "OK" : (c.sinRespuesta ? "Sin Respuesta" : "Escribio");
-                const valReconocimiento = "SI";
-                const valAcuerdoPago = c.acuerdoFecha ? `SI (${c.acuerdoFecha})` : "SI/PEN";
-                const valCausaNoPago = hasAbono ? "N/A" : "DEFINIR";
-                const valAbonado = hasAbono ? fmtMonedaExcel(c.abonado) : "";
-                
-                const info = obtenerInfoCobro(c);
-                let valFechaAcuerdo = "Cobrar Nuevamente";
-                if (c.sinRespuesta) {
-                    valFechaAcuerdo = `Reescribir en 5 días (${c.acuerdoFecha})`;
-                } else if (c.acuerdoFecha) {
-                    valFechaAcuerdo = `Acuerdo: ${c.acuerdoFecha}`;
-                } else if (info.fechaReferencia && info.difDias <= 15) {
-                    valFechaAcuerdo = `Cobrar en 8 días (${info.strProxima})`;
-                } else if (info.esCompra) {
-                    valFechaAcuerdo = "Cobrar (Compró)";
-                }
+                const worksheet = XLSX.utils.json_to_sheet(dataExport);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Cartera General");
 
-                const valRecuperacion = pctStr;
-                const valUltimoMov = c.ultimoAbono || c.ultimaCompra || "";
-                const valObs = c.observaciones || "";
-                const valNotaAcuerdo = c.acuerdoNota || "";
-
-                const rowData = [
-                    valCliente, valCobrar, valMensaje, valReconocimiento, valAcuerdoPago,
-                    valCausaNoPago, valAbonado, valFechaAcuerdo, valRecuperacion,
-                    valUltimoMov, valObs, valNotaAcuerdo
-                ];
-
-                csvContent += rowData.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(",") + "\n";
-            });
-
-            const encodedUri = encodeURI(encodeURIComponent(csvContent));
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "GESTION_DE_CARTERA_COMPLETA.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                XLSX.writeFile(workbook, "GESTION_DE_CARTERA_COMPLETA.xlsx");
+            } catch (err) {
+                alert("Error exportando Excel: " + err.message);
+            }
         }
 
         function filtrarTabla() { renderTabla(); }
