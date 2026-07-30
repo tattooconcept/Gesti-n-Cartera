@@ -79,6 +79,12 @@
                     <span>📜 Registro de Movimientos</span>
                 </button>
 
+                <!-- BOTÓN RESTABLECER NUBE -->
+                <button onclick="forzarRestablecerNubeOficial()" class="sec-admin hidden bg-rose-700 hover:bg-rose-600 text-white px-3 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-1.5 text-xs shadow-lg shadow-rose-900/30 active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-rotate-left text-sm"></i>
+                    <span>Reset Base Oficial</span>
+                </button>
+
                 <button onclick="exportarExcelOficial()" class="bg-emerald-600/90 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-emerald-900/30 active:scale-95">
                     <i class="fa-solid fa-file-excel text-sm"></i>
                     <span>Exportar Excel</span>
@@ -676,7 +682,7 @@
                 esModoAdmin = true;
                 cerrarModalAuthAdmin();
                 aplicarPermisosVisuales();
-                alert("🔑 Modo Administrador Desbloqueado con Éxito. Ahora puedes editar y consultar la bitácora.");
+                alert("🔑 Modo Administrador Desbloqueado con Éxito.");
             } else {
                 alert("❌ Clave incorrecta. Inténtalo de nuevo.");
             }
@@ -703,8 +709,7 @@
         function cargarDatos() {
             aplicarPermisosVisuales();
 
-            // Cargar versión 16 limpia para resolver la prueba de Oscar Morbida
-            const guardado = localStorage.getItem('cartera_db_v16');
+            const guardado = localStorage.getItem('cartera_db_v18');
             if (guardado) {
                 clientes = JSON.parse(guardado);
             } else {
@@ -719,7 +724,7 @@
                 db.collection("cartera").doc("general").onSnapshot((doc) => {
                     if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
-                        localStorage.setItem('cartera_db_v16', JSON.stringify(clientes));
+                        localStorage.setItem('cartera_db_v18', JSON.stringify(clientes));
                         renderTabla();
                         actualizarMetricas();
                         renderizarTareasWidgetHoy();
@@ -733,7 +738,7 @@
         }
 
         function guardarEnNube() {
-            localStorage.setItem('cartera_db_v16', JSON.stringify(clientes));
+            localStorage.setItem('cartera_db_v18', JSON.stringify(clientes));
             if (db) {
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
@@ -742,7 +747,31 @@
             }
         }
 
-        // LÓGICA MÓDULO BITÁCORA GLOBAL ADMIN
+        function forzarRestablecerNubeOficial() {
+            if (!esModoAdmin) return;
+            if (confirm("⚠️ ¿Deseas restablecer la base de datos oficial completa ($145.845.538) y limpiar la Nube?")) {
+                clientes = JSON.parse(JSON.stringify(baseInicial));
+                for(let i=11; i<=18; i++) { localStorage.removeItem('cartera_db_v'+i); }
+                localStorage.setItem('cartera_db_v18', JSON.stringify(clientes));
+
+                if (db) {
+                    db.collection("cartera").doc("general").set({
+                        clientesData: clientes,
+                        ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        alert("✅ Nube y memoria local restablecidas con éxito a la Cartera Oficial ($145.845.538).");
+                        renderTabla();
+                        actualizarMetricas();
+                        renderizarTareasWidgetHoy();
+                    }).catch(err => alert("Error al restablecer nube: " + err));
+                } else {
+                    alert("✅ Memoria local restablecida.");
+                    renderTabla();
+                    actualizarMetricas();
+                }
+            }
+        }
+
         function abrirModalBitacoraAdmin() {
             if (!esModoAdmin) return;
             renderizarTablaBitacoraGlobal();
@@ -1270,6 +1299,7 @@
             document.getElementById('modalConfirmarImportacion').classList.add('hidden');
         }
 
+        // APLICACIÓN OFICIAL DE PLANILLA EXCEL (ASIGNACIÓN DUAL DE FECHAS DE COMPRA Y ABONO)
         function aplicarImportacionConfirmada() {
             cerrarModalConfirmacion();
 
@@ -1283,10 +1313,12 @@
 
                     item.targetClient.saldo = item.saldoOficialPlanilla;
 
+                    // SI LA PLANILLA TRAE COMPRA -> ACTUALIZA FECHA ÚLTIMA COMPRA
                     if (item.compraNum > 0) {
                         if (item.fecha) item.targetClient.ultimaCompra = item.fecha;
                     }
 
+                    // SI LA PLANILLA TRAE ABONO -> ACTUALIZA FECHA ÚLTIMO ABONO Y SUMA ACUMULADO
                     if (item.abonoNum > 0) {
                         item.targetClient.abonado += item.abonoNum;
                         if (item.fecha) item.targetClient.ultimoAbono = item.fecha;
@@ -1533,7 +1565,7 @@
             document.getElementById('modalVisorImagen').classList.add('hidden');
         }
 
-        // ELIMINACIÓN CORREGIDA Y REVERSIÓN GARANTIZADA
+        // ELIMINACIÓN CORREGIDA CON ACTUALIZACIÓN Y REESCRITURA COMPLETA EN FIREBASE CLOUD
         function eliminarMovimientoHistorial(movId) {
             if (!esModoAdmin) return;
             const c = clientes.find(item => item.id === clienteSeleccionadoId);
@@ -1544,15 +1576,26 @@
 
             if (confirm("¿Seguro que deseas eliminar y revertir este movimiento del historial?")) {
                 const mov = c.historialMovimientos[idx];
+                
+                // Revertir valores de saldo y abonado
                 c.saldo = mov.saldoAnterior;
-                c.abonado = mov.abonadoAnterior;
+                if (mov.montoAbono > 0) {
+                    c.abonado = Math.max(0, c.abonado - mov.montoAbono);
+                }
 
+                // Borrar del arreglo
                 c.historialMovimientos.splice(idx, 1);
                 
+                // Sincronizar inmediatamente la reversión en Firebase Firestore
                 guardarEnNube();
+
+                // Refrescar vistas
                 document.getElementById('inputSaldoActualEditar').value = c.saldo;
                 document.getElementById('inputTotalAbonadoEditar').value = c.abonado;
                 renderizarHistorialSeparadoCliente(c);
+                renderTabla();
+                actualizarMetricas();
+                alert(`✅ Movimiento borrado y saldo de ${c.cliente} restablecido a ${fmt(c.saldo)} en la nube.`);
             }
         }
 
