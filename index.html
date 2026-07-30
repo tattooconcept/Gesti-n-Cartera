@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <style>
         body { background: #070a12; color: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -43,14 +42,14 @@
                     </div>
                     <div>
                         <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">Gestión de Cartera Pro</h1>
-                        <p class="text-slate-400 text-xs font-medium">Tablero de Tareas del Día, OCR Inteligente, Historiales e Imágenes Almacenadas</p>
+                        <p class="text-slate-400 text-xs font-medium">Lector Talonario Tattoo Concept, Historiales e Importación Masiva</p>
                     </div>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2.5 w-full lg:w-auto">
                 <button onclick="abrirModalFacturas()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-amber-900/30 active:scale-95">
                     <i class="fa-solid fa-file-invoice-dollar text-sm"></i>
-                    <span>Cargar Factura / Foto</span>
+                    <span>Cargar Factura / Foto Recibo</span>
                 </button>
 
                 <label class="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-indigo-900/30 active:scale-95">
@@ -70,7 +69,7 @@
             </div>
         </div>
 
-        <!-- WIDGET SUPERIOR DE TAREAS DEL DÍA CON BARRA DE PROGRESO DE 0 A 100% -->
+        <!-- WIDGET SUPERIOR DE TAREAS DEL DÍA -->
         <div class="glass-card p-5 rounded-3xl border-t-2 border-indigo-500/60 space-y-3">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div class="flex items-center gap-2.5">
@@ -82,7 +81,6 @@
                         <p id="txtFechaHoyWidget" class="text-[11px] text-slate-400 font-medium"></p>
                     </div>
                 </div>
-                <!-- Barra de Progreso -->
                 <div class="w-full md:w-72 space-y-1">
                     <div class="flex justify-between text-[11px] font-bold">
                         <span class="text-slate-400">Progreso del Día:</span>
@@ -93,10 +91,7 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Desplegable / Contenedor de Tareas -->
             <div id="contenedorTareasHoy" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto custom-scrollbar pt-1">
-                <!-- Se llena dinámicamente con JS -->
             </div>
         </div>
 
@@ -192,7 +187,7 @@
 
     </div>
 
-    <!-- Modal Cargar Facturas (Soporta OCR, 3 Escenarios e Imágenes Guardadas) -->
+    <!-- Modal Cargar Facturas Tattoo Concept -->
     <div id="modalFacturas" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
         <div class="glass-card bg-slate-900/95 border border-slate-700/80 p-6 rounded-3xl max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -201,8 +196,8 @@
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white">Procesador de Factura(s) / Foto</h3>
-                        <p class="text-xs text-slate-400">Sugerencia inteligente de cliente y escaneo OCR de la foto</p>
+                        <h3 class="text-base font-bold text-white">Procesador de Recibos / Foto</h3>
+                        <p class="text-xs text-slate-400">Tattoo Concept - Plantilla de Recibo Oficial</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalFacturas()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition text-xs">
@@ -210,87 +205,80 @@
                 </button>
             </div>
 
-            <!-- Subir Foto OCR -->
-            <div class="p-3.5 bg-amber-950/20 border border-amber-800/40 rounded-2xl space-y-2">
-                <span class="text-[11px] font-bold text-amber-300 block uppercase tracking-wider">📷 Subir Foto de la Factura (Escaneo OCR)</span>
+            <!-- Paso 1: Subir Foto de Factura -->
+            <div class="p-3 bg-amber-950/20 border border-amber-800/40 rounded-2xl space-y-2">
+                <span class="text-[11px] font-bold text-amber-300 block uppercase tracking-wider">📷 Cargar Foto del Recibo</span>
                 <label class="cursor-pointer border border-dashed border-amber-500/50 hover:border-amber-400 p-2.5 rounded-xl flex items-center justify-center gap-2 bg-slate-950/60 transition">
                     <i class="fa-solid fa-camera text-amber-400"></i>
                     <span class="text-xs font-bold text-slate-300" id="lblImagenFactura">Seleccionar Foto (JPG, PNG, WEBP)</span>
-                    <input type="file" id="inputFacturaImagen" accept="image/*" class="hidden" onchange="procesarImagenOCR(event)">
+                    <input type="file" id="inputFacturaImagen" accept="image/*" class="hidden" onchange="cargarFotoFacturaDirecta(event)">
                 </label>
-                <p id="statusOCR" class="text-[10px] text-amber-400/80 font-semibold hidden flex items-center gap-1.5">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> Escaneando foto y reconociendo cliente / montos...
-                </p>
             </div>
 
-            <!-- Sugerencias Inteligentes de Clientes Detectados en la Imagen -->
-            <div id="boxSugerenciasClientes" class="hidden p-2.5 bg-indigo-950/30 border border-indigo-800/40 rounded-2xl space-y-1">
-                <span class="text-[10px] font-bold text-indigo-300 uppercase block">💡 Cliente sugerido por OCR:</span>
-                <div id="listaSugerencias" class="flex flex-wrap gap-1.5"></div>
-            </div>
-
-            <!-- Buscador y Selector de Cliente -->
-            <div class="space-y-1">
-                <label class="block text-[10px] font-bold uppercase text-slate-300">🔍 Buscar y Confirmar Cliente</label>
+            <!-- Paso 2: Buscador Único de Cliente -->
+            <div class="space-y-1.5 relative">
+                <label class="block text-[10px] font-bold uppercase text-slate-300">👤 Buscar Cliente en la Base</label>
                 <div class="relative">
-                    <i class="fa-solid fa-user-tag absolute left-3.5 top-2.5 text-slate-500 text-xs"></i>
-                    <input type="text" id="inputBuscarClienteFactura" oninput="filtrarDropdownClienteFactura()" placeholder="Escribe el nombre del cliente..." class="w-full bg-slate-950 text-amber-400 font-bold text-xs pl-9 pr-4 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                    <i class="fa-solid fa-user-tag absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                    <input type="text" id="inputBuscarClienteFactura" oninput="filtrarListaBusquedaClienteFactura()" placeholder="Escribe el nombre del cliente (ej: Caroline, Jhon...)" class="w-full bg-slate-950 text-amber-400 font-bold text-xs pl-9 pr-4 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
                 </div>
-                <select id="selectFacturaCliente" size="3" onchange="recalcularPreviewFactura()" class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-xl border border-slate-800 focus:outline-none custom-scrollbar">
-                </select>
+                
+                <!-- Resultados limpios de búsqueda -->
+                <div id="boxResultadosBusquedaCliente" class="hidden max-h-36 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl p-1.5 space-y-1 custom-scrollbar">
+                </div>
+
+                <!-- Tarjeta del Cliente Seleccionado -->
+                <div id="cardClienteFacturaSeleccionado" class="p-2.5 bg-indigo-950/30 border border-indigo-800/50 rounded-xl flex justify-between items-center hidden">
+                    <div>
+                        <span class="text-[9px] uppercase font-bold text-indigo-400 block">Cliente Seleccionado:</span>
+                        <span id="txtNombreClienteFacturaSel" class="font-extrabold text-xs text-white"></span>
+                    </div>
+                    <span id="txtSaldoClienteFacturaSel" class="text-xs font-bold text-amber-400"></span>
+                </div>
             </div>
 
-            <!-- Escenario / Tipo de Factura -->
-            <div class="space-y-1">
-                <label class="block text-[10px] font-bold uppercase text-amber-400">⚙️ Tipo de Operación</label>
-                <select id="selectTipoEscenarioFactura" onchange="actualizarCamposEscenario(); recalcularPreviewFactura();" class="w-full bg-slate-950 text-slate-100 text-xs p-2.5 rounded-xl border border-slate-800 font-bold focus:outline-none focus:border-amber-500">
-                    <option value="SOLO_ABONO">1. 🟢 Solo Abono (Disminuye saldo del cliente)</option>
-                    <option value="SOLO_COMPRA">2. 🟠 Solo Compra / Factura Nueva (Incrementa saldo del cliente)</option>
-                    <option value="COMPRA_Y_ABONO">3. 🔵 Compra + Abono Simultáneo (Suma compra y descuenta abono)</option>
-                </select>
+            <!-- Paso 3: Datos de la Factura (Talonario Tattoo Concept) -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Recibo No.</label>
+                    <input type="text" id="inputFacturaNum" placeholder="Ej: 22414" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Fecha Recibo</label>
+                    <input type="date" id="inputFacturaFecha" onchange="recalcularPreviewFactura()" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <div id="boxMontoCompra">
-                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Monto Compra (COP)</label>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">VALOR COMPRA (COP)</label>
                     <input type="number" id="inputFacturaMontoCompra" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-amber-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
                 </div>
-                <div id="boxMontoAbono">
-                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Monto Abono (COP)</label>
+                <div>
+                    <label class="block text-[10px] text-slate-300 font-bold uppercase mb-1">VALOR ABONO (COP)</label>
                     <input type="number" id="inputFacturaMontoAbono" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-emerald-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500">
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Fecha Movimiento (Hoy por defecto)</label>
-                    <input type="date" id="inputFacturaFecha" onchange="recalcularPreviewFactura()" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">N° Factura / Alegra (Opcional)</label>
-                    <input type="text" id="inputFacturaNum" placeholder="Ej: A10084" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                </div>
-            </div>
-
-            <!-- Previsualización del Saldo Resultante -->
-            <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl text-xs space-y-1">
-                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">📊 Previsualización del Saldo Resultante:</span>
+            <!-- Cuadro de Previsualización del Saldo Resultante -->
+            <div class="p-3 bg-slate-950/90 border border-slate-800 rounded-2xl text-xs space-y-1">
+                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">📊 Resumen del Recibo:</span>
                 <div class="flex justify-between text-slate-400">
                     <span>Saldo Anterior:</span>
                     <span id="prevSaldoAnterior" class="font-semibold text-white">$0</span>
                 </div>
                 <div class="flex justify-between text-slate-400">
-                    <span>Impacto Operación:</span>
+                    <span>Operación (+Compra / -Abono):</span>
                     <span id="prevImpacto" class="font-semibold text-emerald-400">$0</span>
                 </div>
                 <div class="flex justify-between text-slate-300 font-bold border-t border-slate-800/80 pt-1">
-                    <span>NUEVO SALDO QUE QUEDARÁ:</span>
+                    <span>NUEVO SALDO DE ESTE CLIENTE:</span>
                     <span id="prevSaldoNuevo" class="text-amber-400 text-sm font-extrabold">$0</span>
                 </div>
             </div>
 
             <button onclick="confirmarYAplicarFactura()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl text-xs font-bold transition shadow-lg shadow-amber-900/40 active:scale-95">
-                Confirmar y Actualizar Cliente
+                Confirmar y Registrar Recibo
             </button>
         </div>
     </div>
@@ -626,7 +614,6 @@
             poblarSelectClientesFactura();
         }
 
-        // RENDERIZAR WIDGET DE TAREAS Y COBROS DE HOY CON BARRA DE PROGRESO 0-100%
         function renderizarTareasWidgetHoy() {
             const hoy = new Date();
             document.getElementById('txtFechaHoyWidget').innerText = `Hoy: ${formatFechaObj(hoy)}`;
@@ -634,7 +621,6 @@
             const contenedor = document.getElementById('contenedorTareasHoy');
             contenedor.innerHTML = '';
 
-            // Filtrar clientes pendientes de cobro/acuerdo para hoy o atrasados
             const clientesTareas = clientes.filter(c => {
                 if (c.saldo <= 0) return false;
                 const info = obtenerInfoCobro(c);
@@ -702,20 +688,56 @@
             recalcularPreviewFactura();
         }
 
-        function filtrarDropdownClienteFactura() {
-            const query = document.getElementById('inputBuscarClienteFactura').value.toLowerCase();
-            const select = document.getElementById('selectFacturaCliente');
-            select.innerHTML = '';
-            
+        function filtrarListaBusquedaClienteFactura() {
+            const query = document.getElementById('inputBuscarClienteFactura').value.toLowerCase().trim();
+            const box = document.getElementById('boxResultadosBusquedaCliente');
+            box.innerHTML = '';
+
+            if (query.length < 1) {
+                box.classList.add('hidden');
+                return;
+            }
+
             const filtrados = clientes.filter(c => c.cliente.toLowerCase().includes(query));
-            filtrados.forEach((c, idx) => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.innerText = `${c.cliente} (Saldo actual: ${fmt(c.saldo)})`;
-                if (idx === 0) opt.selected = true;
-                select.appendChild(opt);
-            });
+            if (filtrados.length === 0) {
+                box.innerHTML = `<span class="text-[10px] text-slate-500 p-1 block">Sin resultados</span>`;
+            } else {
+                filtrados.slice(0, 5).forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-1.5 hover:bg-indigo-600/20 text-white rounded-lg text-xs font-semibold flex justify-between items-center transition";
+                    btn.innerHTML = `<span>${c.cliente}</span> <span class="text-amber-400 font-bold">${fmt(c.saldo)}</span>`;
+                    btn.onclick = function() {
+                        seleccionarClienteFacturaDirecto(c);
+                        box.classList.add('hidden');
+                    };
+                    box.appendChild(btn);
+                });
+            }
+            box.classList.remove('hidden');
+        }
+
+        function seleccionarClienteFacturaDirecto(c) {
+            document.getElementById('inputBuscarClienteFactura').value = c.cliente;
+            document.getElementById('selectFacturaCliente').value = c.id;
+
+            document.getElementById('txtNombreClienteFacturaSel').innerText = c.cliente;
+            document.getElementById('txtSaldoClienteFacturaSel').innerText = fmt(c.saldo);
+            document.getElementById('cardClienteFacturaSeleccionado').classList.remove('hidden');
+
             recalcularPreviewFactura();
+        }
+
+        function cargarFotoFacturaDirecta(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagenBase64TemporalOCR = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            document.getElementById('lblImagenFactura').innerText = `Foto cargada: ${file.name}`;
         }
 
         function abrirModalFacturas() {
@@ -777,80 +799,7 @@
         }
 
         function procesarImagenOCR(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // Guardar imagen temporalmente en base64
-            const fileReader = new FileReader();
-            fileReader.onload = function(e) {
-                imagenBase64TemporalOCR = e.target.result;
-            };
-            fileReader.readAsDataURL(file);
-
-            document.getElementById('lblImagenFactura').innerText = `Foto cargada: ${file.name}`;
-            const statusOCR = document.getElementById('statusOCR');
-            statusOCR.classList.remove('hidden');
-
-            Tesseract.recognize(file, 'spa', {
-                logger: m => console.log(m)
-            }).then(({ data: { text } }) => {
-                statusOCR.classList.add('hidden');
-
-                const textUpper = text.toUpperCase();
-                const coincidenciaClientes = [];
-
-                clientes.forEach(c => {
-                    if (textUpper.includes(c.cliente.toUpperCase())) {
-                        coincidenciaClientes.push(c);
-                    }
-                });
-
-                // Mostrar Botones de Sugerencia Inteligente
-                const boxSug = document.getElementById('boxSugerenciasClientes');
-                const listaSug = document.getElementById('listaSugerencias');
-                listaSug.innerHTML = '';
-
-                if (coincidenciaClientes.length > 0) {
-                    boxSug.classList.remove('hidden');
-                    coincidenciaClientes.forEach(c => {
-                        const btn = document.createElement('button');
-                        btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition shadow";
-                        btn.innerText = `👉 Confirmar: ${c.cliente}`;
-                        btn.onclick = function() {
-                            document.getElementById('inputBuscarClienteFactura').value = c.cliente;
-                            filtrarDropdownClienteFactura();
-                        };
-                        listaSug.appendChild(btn);
-                    });
-                } else {
-                    boxSug.classList.add('hidden');
-                }
-
-                // Detectar montos
-                const matches = text.match(/\$?(\d{1,3}(\.\d{3})*|\d{4,7})/g);
-                if (matches && matches.length > 0) {
-                    let maxVal = 0;
-                    matches.forEach(m => {
-                        let clean = m.replace(/\$/g, '').replace(/\./g, '');
-                        let num = parseFloat(clean);
-                        if (!isNaN(num) && num > maxVal && num < 100000000) maxVal = num;
-                    });
-                    if (maxVal > 0) {
-                        const escenario = document.getElementById('selectTipoEscenarioFactura').value;
-                        if (escenario === 'SOLO_ABONO') {
-                            document.getElementById('inputFacturaMontoAbono').value = maxVal;
-                        } else {
-                            document.getElementById('inputFacturaMontoCompra').value = maxVal;
-                        }
-                    }
-                }
-
-                recalcularPreviewFactura();
-                alert("📷 Foto analizada con éxito. Se generaron las sugerencias de clientes y montos.");
-            }).catch(err => {
-                statusOCR.classList.add('hidden');
-                alert("Foto cargada correctamente. Selecciona el cliente y verifica los montos.");
-            });
+            cargarFotoFacturaDirecta(event);
         }
 
         function confirmarYAplicarFactura() {
@@ -910,19 +859,19 @@
                 abonadoAnterior: abonadoAnterior,
                 abonadoNuevo: c.abonado,
                 fecha: fechaStr,
-                detalle: numFactura ? `Factura #${numFactura}` : "Factura / Transacción",
+                detalle: numFactura ? `Recibo No. ${numFactura}` : "Factura / Recibo",
                 imagenFactura: imagenBase64TemporalOCR || null
             });
 
             imagenBase64TemporalOCR = null;
-            document.getElementById('boxSugerenciasClientes').classList.add('hidden');
+            document.getElementById('cardClienteFacturaSeleccionado').classList.add('hidden');
             localStorage.setItem('cartera_db_v10', JSON.stringify(clientes));
 
             cerrarModalFacturas();
             renderTabla();
             actualizarMetricas();
             renderizarTareasWidgetHoy();
-            alert(`✅ Factura procesada correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
+            alert(`✅ Recibo procesado correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
         }
 
         function prepararPrevisualizacionExcel(event) {
@@ -1336,7 +1285,6 @@
             c.sinRespuesta = chkSinResp;
 
             if (chkSinResp) {
-                // Calcular fecha en 5 días desde hoy
                 const hoy5 = new Date();
                 hoy5.setDate(hoy5.getDate() + 5);
                 c.acuerdoFecha = formatFechaObj(hoy5);
