@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- FIREBASE SDKs (v9 Compat para Firestore) -->
+    <!-- FIREBASE SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -543,7 +543,7 @@
             console.log("Error inicializando Firebase:", e);
         }
 
-        // CLAVE DE ADMINISTRADOR SOLICITADA
+        // CLAVE DE ADMINISTRADOR
         const CLAVE_ADMIN_SECRETA = "1994";
 
         let esModoAdmin = false;
@@ -645,31 +645,30 @@
             }
         }
 
+        // CARGA GARANTIZADA DE DATOS
         function cargarDatos() {
             aplicarPermisosVisuales();
 
+            // Cargar inmediatamente la base original para no dejar vacía la pantalla
+            clientes = JSON.parse(JSON.stringify(baseInicial));
+            renderTabla();
+            actualizarMetricas();
+            renderizarTareasWidgetHoy();
+
+            // Intentar conectar y sincronizar en segundo plano con Firebase
             if (db) {
                 db.collection("cartera").doc("general").onSnapshot((doc) => {
-                    if (doc.exists && doc.data().clientesData) {
+                    if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
+                        renderTabla();
+                        actualizarMetricas();
+                        renderizarTareasWidgetHoy();
                     } else {
-                        clientes = JSON.parse(JSON.stringify(baseInicial));
                         guardarEnNube();
                     }
-                    renderTabla();
-                    actualizarMetricas();
-                    renderizarTareasWidgetHoy();
+                }, (error) => {
+                    console.log("Servicio en la nube no respondió inmediatamente, manteniendo datos en pantalla.");
                 });
-            } else {
-                const guardado = localStorage.getItem('cartera_db_v11');
-                if (guardado) {
-                    clientes = JSON.parse(guardado);
-                } else {
-                    clientes = JSON.parse(JSON.stringify(baseInicial));
-                }
-                renderTabla();
-                actualizarMetricas();
-                renderizarTareasWidgetHoy();
             }
         }
 
@@ -678,10 +677,9 @@
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
                     ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } else {
-                localStorage.setItem('cartera_db_v11', JSON.stringify(clientes));
+                }).catch(err => console.log("Error guardando en nube:", err));
             }
+            localStorage.setItem('cartera_db_v11', JSON.stringify(clientes));
         }
 
         function obtenerInfoCobro(c) {
