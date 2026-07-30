@@ -42,12 +42,12 @@
                     </div>
                     <div>
                         <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">Gestión de Cartera Pro</h1>
-                        <p class="text-slate-400 text-xs font-medium">Lector Talonario Tattoo Concept, Historiales e Importación Masiva</p>
+                        <p class="text-slate-400 text-xs font-medium">Procesador de Recibos, Tareas del Día e Importación Masiva</p>
                     </div>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2.5 w-full lg:w-auto">
-                <button onclick="abrirModalFacturas()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-amber-900/30 active:scale-95">
+                <button onclick="abrirModalFacturas()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-amber-900/30 active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-file-invoice-dollar text-sm"></i>
                     <span>Cargar Factura / Foto Recibo</span>
                 </button>
@@ -237,7 +237,17 @@
                 </div>
             </div>
 
-            <!-- Paso 3: Datos de la Factura (Talonario Tattoo Concept) -->
+            <!-- Paso 3: Selección del Tipo de Operación / Escenario -->
+            <div class="space-y-1">
+                <label class="block text-[10px] font-bold uppercase text-amber-400">⚙️ Tipo de Operación</label>
+                <select id="selectTipoEscenarioFactura" onchange="actualizarCamposEscenario(); recalcularPreviewFactura();" class="w-full bg-slate-950 text-slate-100 text-xs p-2.5 rounded-xl border border-slate-800 font-bold focus:outline-none focus:border-amber-500">
+                    <option value="SOLO_ABONO">1. 🟢 Solo Abono (El cliente paga un valor y reduce su saldo)</option>
+                    <option value="SOLO_COMPRA">2. 🟠 Solo Compra / Nueva Factura (Incrementa el saldo del cliente)</option>
+                    <option value="COMPRA_Y_ABONO">3. 🔵 Compra + Abono Simultáneo (Factura nueva con abono inmediato)</option>
+                </select>
+            </div>
+
+            <!-- Paso 4: Datos de la Factura -->
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Recibo No.</label>
@@ -250,11 +260,11 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <div>
+                <div id="boxMontoCompra" class="hidden">
                     <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">VALOR COMPRA (COP)</label>
                     <input type="number" id="inputFacturaMontoCompra" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-amber-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
                 </div>
-                <div>
+                <div id="boxMontoAbono">
                     <label class="block text-[10px] text-slate-300 font-bold uppercase mb-1">VALOR ABONO (COP)</label>
                     <input type="number" id="inputFacturaMontoAbono" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-emerald-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500">
                 </div>
@@ -380,7 +390,7 @@
         </div>
     </div>
 
-    <!-- Modal Gestionar Cliente: HISTORIAL SEPARADO DE COMPRAS Y ABONOS + GALERÍA FOTOS -->
+    <!-- Modal Gestionar Cliente -->
     <div id="modalAbono" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50 transition-all">
         <div class="glass-card bg-slate-900/95 border border-slate-700/60 p-6 rounded-3xl max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
