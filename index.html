@@ -356,7 +356,8 @@
                             <th class="p-3">Cliente Detectado</th>
                             <th class="p-3">Cliente Coincidente</th>
                             <th class="p-3 text-right">Saldo Anterior</th>
-                            <th class="p-3 text-right">Abono / Compra</th>
+                            <th class="p-3 text-right">Compra</th>
+                            <th class="p-3 text-right">Abono</th>
                             <th class="p-3 text-right font-bold text-amber-400">Saldo Nuevo</th>
                         </tr>
                     </thead>
@@ -398,7 +399,7 @@
                         <tr>
                             <th class="p-3">Cliente</th>
                             <th class="p-3 text-right">Saldo Anterior</th>
-                            <th class="p-3 text-right text-emerald-400">Abono Registrado</th>
+                            <th class="p-3 text-right text-emerald-400">Movimientos Aplicados</th>
                             <th class="p-3 text-right font-bold text-amber-400">Saldo Nuevo</th>
                         </tr>
                     </thead>
@@ -543,7 +544,6 @@
             console.log("Error inicializando Firebase:", e);
         }
 
-        // CLAVE DE ADMINISTRADOR
         const CLAVE_ADMIN_SECRETA = "1994";
 
         let esModoAdmin = false;
@@ -645,21 +645,27 @@
             }
         }
 
-        // CARGA GARANTIZADA DE DATOS
         function cargarDatos() {
             aplicarPermisosVisuales();
 
-            // Cargar inmediatamente la base original para no dejar vacía la pantalla
-            clientes = JSON.parse(JSON.stringify(baseInicial));
+            // Cargar base local de inmediato
+            const guardado = localStorage.getItem('cartera_db_v12');
+            if (guardado) {
+                clientes = JSON.parse(guardado);
+            } else {
+                clientes = JSON.parse(JSON.stringify(baseInicial));
+            }
+
             renderTabla();
             actualizarMetricas();
             renderizarTareasWidgetHoy();
 
-            // Intentar conectar y sincronizar en segundo plano con Firebase
+            // Sincronizar en tiempo real con Firebase Firestore
             if (db) {
                 db.collection("cartera").doc("general").onSnapshot((doc) => {
                     if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
+                        localStorage.setItem('cartera_db_v12', JSON.stringify(clientes));
                         renderTabla();
                         actualizarMetricas();
                         renderizarTareasWidgetHoy();
@@ -667,19 +673,19 @@
                         guardarEnNube();
                     }
                 }, (error) => {
-                    console.log("Servicio en la nube no respondió inmediatamente, manteniendo datos en pantalla.");
+                    console.log("Firebase conectando...");
                 });
             }
         }
 
         function guardarEnNube() {
+            localStorage.setItem('cartera_db_v12', JSON.stringify(clientes));
             if (db) {
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
                     ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(err => console.log("Error guardando en nube:", err));
+                }).catch(err => console.log("Error sincronizando en nube:", err));
             }
-            localStorage.setItem('cartera_db_v11', JSON.stringify(clientes));
         }
 
         function obtenerInfoCobro(c) {
@@ -995,6 +1001,7 @@
             alert(`✅ Recibo procesado correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
         }
 
+        // LÓGICA CORREGIDA Y MEJORADA PARA IMPORTACIÓN DE PLANILLA (COMPRA VS ABONO)
         function prepararPrevisualizacionExcel(event) {
             if (!esModoAdmin) { alert("Ingresa con tu clave de Administrador para importar planillas."); return; }
             const file = event.target.files[0];
@@ -1020,7 +1027,7 @@
                         const str = cell.toString().toUpperCase().trim();
                         if (str.includes('FECHA')) colFecha = colIdx;
                         if (str.includes('CLIENTE')) colCliente = colIdx;
-                        if (str.includes('COMPRA')) colCompra = colIdx;
+                        if (str.includes('COMPRA') || str.includes('FACTURA')) colCompra = colIdx;
                         if (str.includes('ABONO')) colAbono = colIdx;
                         if (str.includes('SALDO ACTUAL')) colSaldoActual = colIdx;
                     });
@@ -1056,6 +1063,13 @@
                         }
                     }
 
+                    let rawCompra = row[colCompra];
+                    let compraNum = 0;
+                    if (rawCompra) {
+                        let cleanC = rawCompra.toString().replace(/\$/g, '').replace(/\s/g, '').replace(/\./g, '').replace(/,/g, '.');
+                        compraNum = parseFloat(cleanC) || 0;
+                    }
+
                     let rawAbono = row[colAbono];
                     let abonoNum = 0;
                     if (rawAbono) {
@@ -1068,7 +1082,13 @@
                     if (rawSaldo !== undefined && rawSaldo !== null) {
                         let cleanS = rawSaldo.toString().replace(/\$/g, '').replace(/\s/g, '').replace(/\./g, '').replace(/,/g, '.').replace('-', '0');
                         let parsedS = parseFloat(cleanS);
-                        if (!isNaN(parsedS) && parsedS >= 0) saldoNuevoCalculado = parsedS;
+                        if (!isNaN(parsedS) && parsedS >= 0) {
+                            saldoNuevoCalculado = parsedS;
+                        } else if (targetClient) {
+                            saldoNuevoCalculado = Math.max(0, targetClient.saldo + compraNum - abonoNum);
+                        }
+                    } else if (targetClient) {
+                        saldoNuevoCalculado = Math.max(0, targetClient.saldo + compraNum - abonoNum);
                     }
 
                     let rawFecha = row[colFecha];
@@ -1084,6 +1104,7 @@
                         clienteDetectado: rawCliente,
                         targetClient: targetClient,
                         saldoAnterior: targetClient ? targetClient.saldo : 0,
+                        compraNum: compraNum,
                         abonoNum: abonoNum,
                         saldoNuevo: saldoNuevoCalculado,
                         fecha: fechaFormateada
@@ -1102,7 +1123,8 @@
                             ${item.targetClient ? item.targetClient.cliente : '❌ Sin coincidencia'}
                         </td>
                         <td class="p-3 text-right font-semibold text-slate-400">${fmt(item.saldoAnterior)}</td>
-                        <td class="p-3 text-right font-bold text-emerald-400">${fmt(item.abonoNum)}</td>
+                        <td class="p-3 text-right font-bold text-amber-400">${item.compraNum > 0 ? fmt(item.compraNum) : '-'}</td>
+                        <td class="p-3 text-right font-bold text-emerald-400">${item.abonoNum > 0 ? fmt(item.abonoNum) : '-'}</td>
                         <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoNuevo)}</td>
                     `;
                     tbody.appendChild(tr);
@@ -1119,6 +1141,7 @@
             document.getElementById('modalConfirmarImportacion').classList.add('hidden');
         }
 
+        // APLICACIÓN OFICIAL DE PLANILLA ACTUALIZANDO FECHAS DE COMPRA Y ABONO SEPARADAMENTE
         function aplicarImportacionConfirmada() {
             cerrarModalConfirmacion();
 
@@ -1131,23 +1154,36 @@
                     const abonadoAnt = item.targetClient.abonado;
 
                     item.targetClient.saldo = item.saldoNuevo;
+
+                    // Actualizar compras e historia
+                    if (item.compraNum > 0) {
+                        if (item.fecha) item.targetClient.ultimaCompra = item.fecha;
+                    }
+
+                    // Actualizar abonos e historia
                     if (item.abonoNum > 0) {
                         item.targetClient.abonado += item.abonoNum;
                         if (item.fecha) item.targetClient.ultimoAbono = item.fecha;
                     }
 
                     if (!item.targetClient.historialMovimientos) item.targetClient.historialMovimientos = [];
+                    
+                    let detalleTexto = "Importación Planilla";
+                    if (item.compraNum > 0 && item.abonoNum > 0) detalleTexto = "Planilla: Compra + Abono";
+                    else if (item.compraNum > 0) detalleTexto = "Planilla: Nueva Compra";
+                    else if (item.abonoNum > 0) detalleTexto = "Planilla: Abono";
+
                     item.targetClient.historialMovimientos.push({
                         id: Date.now() + Math.random(),
                         tipo: "IMPORTACION_PLANILLA",
-                        montoCompra: 0,
+                        montoCompra: item.compraNum,
                         montoAbono: item.abonoNum,
                         saldoAnterior: saldoAnt,
                         saldoNuevo: item.saldoNuevo,
                         abonadoAnterior: abonadoAnt,
                         abonadoNuevo: item.targetClient.abonado,
                         fecha: item.fecha || formatFechaObj(new Date()),
-                        detalle: "Importación Planilla General"
+                        detalle: detalleTexto
                     });
 
                     const tr = document.createElement('tr');
@@ -1155,7 +1191,7 @@
                     tr.innerHTML = `
                         <td class="p-3 font-bold text-white">${item.targetClient.cliente}</td>
                         <td class="p-3 text-right font-semibold text-slate-400">${fmt(saldoAnt)}</td>
-                        <td class="p-3 text-right font-bold text-emerald-400">${fmt(item.abonoNum)}</td>
+                        <td class="p-3 text-right font-bold text-emerald-400">+C: ${fmt(item.compraNum)} | -A: ${fmt(item.abonoNum)}</td>
                         <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoNuevo)}</td>
                     `;
                     tbodyFinal.appendChild(tr);
@@ -1509,7 +1545,7 @@
                 csvContent += rowData.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(",") + "\n";
             });
 
-            const encodedUri = encodeURI(csvContent);
+            const encodedUri = encodeURI(encodeURIComponent(csvContent));
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
             link.setAttribute("download", "GESTION_DE_CARTERA_COMPLETA.csv");
