@@ -42,7 +42,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">Gestión de Cartera Pro</h1>
-                        <p class="text-slate-400 text-xs font-medium">Procesador de Recibos, Tareas del Día e Importación Masiva</p>
+                        <p class="text-slate-400 text-xs font-medium">Asistente Visual de Recibos, Tareas del Día y Control de Cobros</p>
                     </div>
                 </div>
             </div>
@@ -187,9 +187,9 @@
 
     </div>
 
-    <!-- Modal Cargar Facturas Tattoo Concept -->
+    <!-- Modal Cargar Facturas Tattoo Concept con Asistente Visual -->
     <div id="modalFacturas" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-        <div class="glass-card bg-slate-900/95 border border-slate-700/80 p-6 rounded-3xl max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div class="glass-card bg-slate-900/95 border border-slate-700/80 p-6 rounded-3xl max-w-3xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">
@@ -205,68 +205,81 @@
                 </button>
             </div>
 
-            <!-- Paso 1: Subir Foto de Factura -->
-            <div class="p-3 bg-amber-950/20 border border-amber-800/40 rounded-2xl space-y-2">
-                <span class="text-[11px] font-bold text-amber-300 block uppercase tracking-wider">📷 Cargar Foto del Recibo</span>
-                <label class="cursor-pointer border border-dashed border-amber-500/50 hover:border-amber-400 p-2.5 rounded-xl flex items-center justify-center gap-2 bg-slate-950/60 transition">
-                    <i class="fa-solid fa-camera text-amber-400"></i>
-                    <span class="text-xs font-bold text-slate-300" id="lblImagenFactura">Seleccionar Foto (JPG, PNG, WEBP)</span>
-                    <input type="file" id="inputFacturaImagen" accept="image/*" class="hidden" onchange="cargarFotoFacturaDirecta(event)">
-                </label>
-            </div>
-
-            <!-- Paso 2: Buscador Único de Cliente -->
-            <div class="space-y-1.5 relative">
-                <label class="block text-[10px] font-bold uppercase text-slate-300">👤 Buscar Cliente en la Base</label>
-                <div class="relative">
-                    <i class="fa-solid fa-user-tag absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                    <input type="text" id="inputBuscarClienteFactura" oninput="filtrarListaBusquedaClienteFactura()" placeholder="Escribe el nombre del cliente (ej: Caroline, Jhon...)" class="w-full bg-slate-950 text-amber-400 font-bold text-xs pl-9 pr-4 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                </div>
+            <!-- Estructura en 2 Columnas: Foto al lado de los Campos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
-                <!-- Resultados limpios de búsqueda -->
-                <div id="boxResultadosBusquedaCliente" class="hidden max-h-36 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl p-1.5 space-y-1 custom-scrollbar">
-                </div>
-
-                <!-- Tarjeta del Cliente Seleccionado -->
-                <div id="cardClienteFacturaSeleccionado" class="p-2.5 bg-indigo-950/30 border border-indigo-800/50 rounded-xl flex justify-between items-center hidden">
-                    <div>
-                        <span class="text-[9px] uppercase font-bold text-indigo-400 block">Cliente Seleccionado:</span>
-                        <span id="txtNombreClienteFacturaSel" class="font-extrabold text-xs text-white"></span>
+                <!-- Columna Izquierda: Cargar Foto y Vista Previa -->
+                <div class="space-y-3 flex flex-col justify-between">
+                    <div class="p-3 bg-amber-950/20 border border-amber-800/40 rounded-2xl space-y-2">
+                        <span class="text-[11px] font-bold text-amber-300 block uppercase tracking-wider">📷 Cargar Foto del Recibo</span>
+                        <label class="cursor-pointer border border-dashed border-amber-500/50 hover:border-amber-400 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 bg-slate-950/60 transition">
+                            <i class="fa-solid fa-camera text-amber-400 text-lg"></i>
+                            <span class="text-xs font-bold text-slate-300 text-center" id="lblImagenFactura">Haz clic para subir foto del talonario</span>
+                            <input type="file" id="inputFacturaImagen" accept="image/*" class="hidden" onchange="cargarFotoFacturaDirecta(event)">
+                        </label>
                     </div>
-                    <span id="txtSaldoClienteFacturaSel" class="text-xs font-bold text-amber-400"></span>
-                </div>
-            </div>
 
-            <!-- Paso 3: Selección del Tipo de Operación / Escenario -->
-            <div class="space-y-1">
-                <label class="block text-[10px] font-bold uppercase text-amber-400">⚙️ Tipo de Operación</label>
-                <select id="selectTipoEscenarioFactura" onchange="actualizarCamposEscenario(); recalcularPreviewFactura();" class="w-full bg-slate-950 text-slate-100 text-xs p-2.5 rounded-xl border border-slate-800 font-bold focus:outline-none focus:border-amber-500">
-                    <option value="SOLO_ABONO">1. 🟢 Solo Abono (El cliente paga un valor y reduce su saldo)</option>
-                    <option value="SOLO_COMPRA">2. 🟠 Solo Compra / Nueva Factura (Incrementa el saldo del cliente)</option>
-                    <option value="COMPRA_Y_ABONO">3. 🔵 Compra + Abono Simultáneo (Factura nueva con abono inmediato)</option>
-                </select>
-            </div>
+                    <!-- Cuadro de Vista Previa de la Foto Subida -->
+                    <div id="boxPreviewFotoFactura" class="hidden p-2 bg-slate-950 rounded-2xl border border-slate-800 flex flex-col items-center max-h-[220px]">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase mb-1">Imagen Almacenada:</span>
+                        <img id="imgPreviewModalFactura" src="" alt="Vista previa" class="max-h-[180px] rounded-xl object-contain">
+                    </div>
+                </div>
 
-            <!-- Paso 4: Datos de la Factura -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Recibo No.</label>
-                    <input type="text" id="inputFacturaNum" placeholder="Ej: 22414" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Fecha Recibo</label>
-                    <input type="date" id="inputFacturaFecha" onchange="recalcularPreviewFactura()" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                </div>
-            </div>
+                <!-- Columna Derecha: Campos del Talonario -->
+                <div class="space-y-3">
+                    <!-- Buscador Único de Cliente -->
+                    <div class="space-y-1 relative">
+                        <label class="block text-[10px] font-bold uppercase text-slate-300">👤 Buscar Cliente en la Base</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user-tag absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                            <input type="text" id="inputBuscarClienteFactura" oninput="filtrarListaBusquedaClienteFactura()" placeholder="Escribe nombre (ej: Caroline, Jhon...)" class="w-full bg-slate-950 text-amber-400 font-bold text-xs pl-9 pr-4 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                        </div>
+                        
+                        <div id="boxResultadosBusquedaCliente" class="hidden max-h-32 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl p-1.5 space-y-1 custom-scrollbar absolute w-full z-30 shadow-2xl">
+                        </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div id="boxMontoCompra" class="hidden">
-                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">VALOR COMPRA (COP)</label>
-                    <input type="number" id="inputFacturaMontoCompra" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-amber-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                </div>
-                <div id="boxMontoAbono">
-                    <label class="block text-[10px] text-slate-300 font-bold uppercase mb-1">VALOR ABONO (COP)</label>
-                    <input type="number" id="inputFacturaMontoAbono" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-emerald-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500">
+                        <div id="cardClienteFacturaSeleccionado" class="p-2 bg-indigo-950/30 border border-indigo-800/50 rounded-xl flex justify-between items-center hidden">
+                            <div>
+                                <span class="text-[9px] uppercase font-bold text-indigo-400 block">Cliente:</span>
+                                <span id="txtNombreClienteFacturaSel" class="font-extrabold text-xs text-white"></span>
+                            </div>
+                            <span id="txtSaldoClienteFacturaSel" class="text-xs font-bold text-amber-400"></span>
+                        </div>
+                        <input type="hidden" id="selectFacturaCliente" value="">
+                    </div>
+
+                    <!-- Tipo de Operación / Escenario -->
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold uppercase text-amber-400">⚙️ Tipo de Operación</label>
+                        <select id="selectTipoEscenarioFactura" onchange="actualizarCamposEscenario(); recalcularPreviewFactura();" class="w-full bg-slate-950 text-slate-100 text-xs p-2 rounded-xl border border-slate-800 font-bold focus:outline-none focus:border-amber-500">
+                            <option value="SOLO_ABONO">1. 🟢 Solo Abono (Resta saldo al cliente)</option>
+                            <option value="SOLO_COMPRA">2. 🟠 Solo Compra (Suma saldo al cliente)</option>
+                            <option value="COMPRA_Y_ABONO">3. 🔵 Compra + Abono Simultáneo (Suma y Resta)</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Recibo No.</label>
+                            <input type="text" id="inputFacturaNum" placeholder="Ej: 22414" class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Fecha Recibo</label>
+                            <input type="date" id="inputFacturaFecha" onchange="recalcularPreviewFactura()" class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="boxMontoCompra" class="hidden">
+                            <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">VALOR COMPRA (COP)</label>
+                            <input type="number" id="inputFacturaMontoCompra" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-amber-400 font-bold text-xs p-2 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div id="boxMontoAbono">
+                            <label class="block text-[10px] text-slate-300 font-bold uppercase mb-1">VALOR ABONO (COP)</label>
+                            <input type="number" id="inputFacturaMontoAbono" oninput="recalcularPreviewFactura()" placeholder="0" class="w-full bg-slate-950 text-emerald-400 font-bold text-xs p-2 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -621,7 +634,6 @@
             renderTabla();
             actualizarMetricas();
             renderizarTareasWidgetHoy();
-            poblarSelectClientesFactura();
         }
 
         function renderizarTareasWidgetHoy() {
@@ -683,21 +695,6 @@
             renderizarTareasWidgetHoy();
         }
 
-        function poblarSelectClientesFactura() {
-            const select = document.getElementById('selectFacturaCliente');
-            if (!select) return;
-            select.innerHTML = '';
-            clientes.forEach((c, idx) => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.innerText = `${c.cliente} (Saldo actual: ${fmt(c.saldo)})`;
-                if (idx === 0) opt.selected = true;
-                select.appendChild(opt);
-            });
-            document.getElementById('inputFacturaFecha').value = getHoyFormateado();
-            recalcularPreviewFactura();
-        }
-
         function filtrarListaBusquedaClienteFactura() {
             const query = document.getElementById('inputBuscarClienteFactura').value.toLowerCase().trim();
             const box = document.getElementById('boxResultadosBusquedaCliente');
@@ -714,7 +711,7 @@
             } else {
                 filtrados.slice(0, 5).forEach(c => {
                     const btn = document.createElement('button');
-                    btn.className = "w-full text-left p-1.5 hover:bg-indigo-600/20 text-white rounded-lg text-xs font-semibold flex justify-between items-center transition";
+                    btn.className = "w-full text-left p-1.5 hover:bg-indigo-600/20 text-white rounded-lg text-xs font-semibold flex justify-between items-center transition cursor-pointer";
                     btn.innerHTML = `<span>${c.cliente}</span> <span class="text-amber-400 font-bold">${fmt(c.saldo)}</span>`;
                     btn.onclick = function() {
                         seleccionarClienteFacturaDirecto(c);
@@ -744,6 +741,8 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 imagenBase64TemporalOCR = e.target.result;
+                document.getElementById('imgPreviewModalFactura').src = imagenBase64TemporalOCR;
+                document.getElementById('boxPreviewFotoFactura').classList.remove('hidden');
             };
             reader.readAsDataURL(file);
 
@@ -751,7 +750,16 @@
         }
 
         function abrirModalFacturas() {
-            poblarSelectClientesFactura();
+            document.getElementById('selectFacturaCliente').value = '';
+            document.getElementById('inputBuscarClienteFactura').value = '';
+            document.getElementById('cardClienteFacturaSeleccionado').classList.add('hidden');
+            document.getElementById('boxPreviewFotoFactura').classList.add('hidden');
+            document.getElementById('inputFacturaMontoCompra').value = '';
+            document.getElementById('inputFacturaMontoAbono').value = '';
+            document.getElementById('inputFacturaNum').value = '';
+            document.getElementById('inputFacturaFecha').value = getHoyFormateado();
+            imagenBase64TemporalOCR = null;
+
             actualizarCamposEscenario();
             document.getElementById('modalFacturas').classList.remove('hidden');
         }
@@ -808,14 +816,10 @@
             document.getElementById('prevSaldoNuevo').innerText = fmt(saldoNuevo);
         }
 
-        function procesarImagenOCR(event) {
-            cargarFotoFacturaDirecta(event);
-        }
-
         function confirmarYAplicarFactura() {
             const selectVal = document.getElementById('selectFacturaCliente').value;
             if (!selectVal) {
-                alert("Por favor selecciona un cliente");
+                alert("Por favor busca y selecciona un cliente primero");
                 return;
             }
             const id = parseInt(selectVal);
@@ -855,7 +859,7 @@
             }
 
             if (numFactura) {
-                c.observaciones = (c.observaciones ? c.observaciones + " | " : "") + `Factura: ${numFactura}`;
+                c.observaciones = (c.observaciones ? c.observaciones + " | " : "") + `Recibo #${numFactura}`;
             }
 
             if (!c.historialMovimientos) c.historialMovimientos = [];
@@ -869,7 +873,7 @@
                 abonadoAnterior: abonadoAnterior,
                 abonadoNuevo: c.abonado,
                 fecha: fechaStr,
-                detalle: numFactura ? `Recibo No. ${numFactura}` : "Factura / Recibo",
+                detalle: numFactura ? `Recibo No. ${numFactura}` : "Recibo de Compra/Abono",
                 imagenFactura: imagenBase64TemporalOCR || null
             });
 
