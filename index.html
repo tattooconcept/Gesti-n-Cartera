@@ -709,7 +709,7 @@
         function cargarDatos() {
             aplicarPermisosVisuales();
 
-            const guardado = localStorage.getItem('cartera_db_v18');
+            const guardado = localStorage.getItem('cartera_db_v20');
             if (guardado) {
                 clientes = JSON.parse(guardado);
             } else {
@@ -724,7 +724,7 @@
                 db.collection("cartera").doc("general").onSnapshot((doc) => {
                     if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
-                        localStorage.setItem('cartera_db_v18', JSON.stringify(clientes));
+                        localStorage.setItem('cartera_db_v20', JSON.stringify(clientes));
                         renderTabla();
                         actualizarMetricas();
                         renderizarTareasWidgetHoy();
@@ -738,7 +738,7 @@
         }
 
         function guardarEnNube() {
-            localStorage.setItem('cartera_db_v18', JSON.stringify(clientes));
+            localStorage.setItem('cartera_db_v20', JSON.stringify(clientes));
             if (db) {
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
@@ -751,8 +751,8 @@
             if (!esModoAdmin) return;
             if (confirm("⚠️ ¿Deseas restablecer la base de datos oficial completa ($145.845.538) y limpiar la Nube?")) {
                 clientes = JSON.parse(JSON.stringify(baseInicial));
-                for(let i=11; i<=18; i++) { localStorage.removeItem('cartera_db_v'+i); }
-                localStorage.setItem('cartera_db_v18', JSON.stringify(clientes));
+                for(let i=11; i<=20; i++) { localStorage.removeItem('cartera_db_v'+i); }
+                localStorage.setItem('cartera_db_v20', JSON.stringify(clientes));
 
                 if (db) {
                     db.collection("cartera").doc("general").set({
@@ -1117,44 +1117,59 @@
                 if (p.length === 3) fechaStr = `${p[2]}/${p[1]}/${p[0]}`;
             }
 
-            const saldoAnterior = c.saldo;
-            const abonadoAnterior = c.abonado;
+            if (!c.historialMovimientos) c.historialMovimientos = [];
 
-            if (escenario === 'SOLO_ABONO') {
-                if (montoAbono <= 0) { alert("Ingresa un monto de abono mayor a $0"); return; }
-                c.saldo = Math.max(0, c.saldo - montoAbono);
-                c.abonado += montoAbono;
-                c.ultimoAbono = fechaStr;
-            } else if (escenario === 'SOLO_COMPRA') {
-                if (montoCompra <= 0) { alert("Ingresa un monto de compra mayor a $0"); return; }
-                c.saldo += montoCompra;
+            let saldoAcumulado = c.saldo;
+            let abonadoAcumulado = c.abonado;
+
+            if (montoCompra > 0 && (escenario === 'SOLO_COMPRA' || escenario === 'COMPRA_Y_ABONO')) {
+                const sAnt = saldoAcumulado;
+                saldoAcumulado = saldoAcumulado + montoCompra;
                 c.ultimaCompra = fechaStr;
-            } else {
-                if (montoCompra <= 0) { alert("Ingresa un monto de compra mayor a $0"); return; }
-                c.saldo = Math.max(0, c.saldo + montoCompra - montoAbono);
-                c.abonado += montoAbono;
-                c.ultimaCompra = fechaStr;
-                if (montoAbono > 0) c.ultimoAbono = fechaStr;
+
+                c.historialMovimientos.push({
+                    id: Date.now() + Math.random(),
+                    tipo: "SOLO_COMPRA",
+                    montoCompra: montoCompra,
+                    montoAbono: 0,
+                    saldoAnterior: sAnt,
+                    saldoNuevo: saldoAcumulado,
+                    abonadoAnterior: abonadoAcumulado,
+                    abonadoNuevo: abonadoAcumulado,
+                    fecha: fechaStr,
+                    detalle: numFactura ? `Compra Recibo #${numFactura}` : "Recibo de Compra",
+                    imagenFactura: imagenBase64TemporalOCR || null
+                });
             }
+
+            if (montoAbono > 0 && (escenario === 'SOLO_ABONO' || escenario === 'COMPRA_Y_ABONO')) {
+                const sAnt = saldoAcumulado;
+                saldoAcumulado = Math.max(0, saldoAcumulado - montoAbono);
+                const aAnt = abonadoAcumulado;
+                abonadoAcumulado += montoAbono;
+                c.ultimoAbono = fechaStr;
+
+                c.historialMovimientos.push({
+                    id: Date.now() + Math.random() + 1,
+                    tipo: "SOLO_ABONO",
+                    montoCompra: 0,
+                    montoAbono: montoAbono,
+                    saldoAnterior: sAnt,
+                    saldoNuevo: saldoAcumulado,
+                    abonadoAnterior: aAnt,
+                    abonadoNuevo: abonadoAcumulado,
+                    fecha: fechaStr,
+                    detalle: numFactura ? `Abono Recibo #${numFactura}` : "Abono de Recibo",
+                    imagenFactura: imagenBase64TemporalOCR || null
+                });
+            }
+
+            c.saldo = saldoAcumulado;
+            c.abonado = abonadoAcumulado;
 
             if (numFactura) {
                 c.observaciones = (c.observaciones ? c.observaciones + " | " : "") + `Recibo #${numFactura}`;
             }
-
-            if (!c.historialMovimientos) c.historialMovimientos = [];
-            c.historialMovimientos.push({
-                id: Date.now(),
-                tipo: escenario,
-                montoCompra: montoCompra,
-                montoAbono: montoAbono,
-                saldoAnterior: saldoAnterior,
-                saldoNuevo: c.saldo,
-                abonadoAnterior: abonadoAnterior,
-                abonadoNuevo: c.abonado,
-                fecha: fechaStr,
-                detalle: numFactura ? `Recibo No. ${numFactura}` : "Recibo de Compra/Abono",
-                imagenFactura: imagenBase64TemporalOCR || null
-            });
 
             imagenBase64TemporalOCR = null;
             document.getElementById('cardClienteFacturaSeleccionado').classList.add('hidden');
@@ -1299,7 +1314,6 @@
             document.getElementById('modalConfirmarImportacion').classList.add('hidden');
         }
 
-        // APLICACIÓN OFICIAL DE PLANILLA EXCEL (ASIGNACIÓN DUAL DE FECHAS DE COMPRA Y ABONO)
         function aplicarImportacionConfirmada() {
             cerrarModalConfirmacion();
 
@@ -1313,31 +1327,40 @@
 
                     item.targetClient.saldo = item.saldoOficialPlanilla;
 
-                    // SI LA PLANILLA TRAE COMPRA -> ACTUALIZA FECHA ÚLTIMA COMPRA
+                    if (!item.targetClient.historialMovimientos) item.targetClient.historialMovimientos = [];
+
                     if (item.compraNum > 0) {
                         if (item.fecha) item.targetClient.ultimaCompra = item.fecha;
+                        item.targetClient.historialMovimientos.push({
+                            id: Date.now() + Math.random(),
+                            tipo: "SOLO_COMPRA",
+                            montoCompra: item.compraNum,
+                            montoAbono: 0,
+                            saldoAnterior: saldoAntApp,
+                            saldoNuevo: item.saldoOficialPlanilla,
+                            abonadoAnterior: abonadoAnt,
+                            abonadoNuevo: item.targetClient.abonado,
+                            fecha: item.fecha || formatFechaObj(new Date()),
+                            detalle: "Planilla Excel: Nueva Compra"
+                        });
                     }
 
-                    // SI LA PLANILLA TRAE ABONO -> ACTUALIZA FECHA ÚLTIMO ABONO Y SUMA ACUMULADO
                     if (item.abonoNum > 0) {
                         item.targetClient.abonado += item.abonoNum;
                         if (item.fecha) item.targetClient.ultimoAbono = item.fecha;
+                        item.targetClient.historialMovimientos.push({
+                            id: Date.now() + Math.random() + 1,
+                            tipo: "SOLO_ABONO",
+                            montoCompra: 0,
+                            montoAbono: item.abonoNum,
+                            saldoAnterior: saldoAntApp,
+                            saldoNuevo: item.saldoOficialPlanilla,
+                            abonadoAnterior: abonadoAnt,
+                            abonadoNuevo: item.targetClient.abonado,
+                            fecha: item.fecha || formatFechaObj(new Date()),
+                            detalle: "Planilla Excel: Abono Recibido"
+                        });
                     }
-
-                    if (!item.targetClient.historialMovimientos) item.targetClient.historialMovimientos = [];
-                    
-                    item.targetClient.historialMovimientos.push({
-                        id: Date.now() + Math.random(),
-                        tipo: "IMPORTACION_PLANILLA",
-                        montoCompra: item.compraNum,
-                        montoAbono: item.abonoNum,
-                        saldoAnterior: saldoAntApp,
-                        saldoNuevo: item.saldoOficialPlanilla,
-                        abonadoAnterior: abonadoAnt,
-                        abonadoNuevo: item.targetClient.abonado,
-                        fecha: item.fecha || formatFechaObj(new Date()),
-                        detalle: "Reconciliación Saldo Oficial Planilla Excel"
-                    });
 
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-slate-800/40";
@@ -1504,7 +1527,7 @@
             divA.innerHTML = '';
 
             const movs = c.historialMovimientos || [];
-            const compras = movs.filter(m => m.montoCompra > 0 || m.tipo === 'SOLO_COMPRA' || m.tipo === 'COMPRA_Y_ABONO');
+            const compras = movs.filter(m => m.montoCompra > 0 || m.tipo === 'SOLO_COMPRA');
             const abonos = movs.filter(m => m.montoAbono > 0 || m.tipo === 'SOLO_ABONO' || m.tipo === 'ABONO_MANUAL');
 
             document.getElementById('cntCompras').innerText = compras.length;
@@ -1523,7 +1546,7 @@
                         </div>
                         <div class="flex gap-1.5">
                             ${m.imagenFactura ? `<button onclick="verImagenFacturaModalByMovId(${m.id})" class="bg-amber-600/30 hover:bg-amber-600 text-amber-300 px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"><i class="fa-solid fa-eye"></i></button>` : ''}
-                            ${esModoAdmin ? `<button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                            ${esModoAdmin ? `<button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer" title="Borrar solo esta compra"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                         </div>
                     `;
                     divC.appendChild(item);
@@ -1541,7 +1564,7 @@
                             <span class="font-bold text-emerald-400 block">${m.detalle || "Abono"}</span>
                             <span class="text-[10px] text-slate-400">Monto: ${fmt(m.montoAbono)} (${m.fecha})</span>
                         </div>
-                        ${esModoAdmin ? `<button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                        ${esModoAdmin ? `<button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer" title="Borrar solo este abono"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     `;
                     divA.appendChild(item);
                 });
@@ -1565,7 +1588,7 @@
             document.getElementById('modalVisorImagen').classList.add('hidden');
         }
 
-        // ELIMINACIÓN CORREGIDA CON ACTUALIZACIÓN Y REESCRITURA COMPLETA EN FIREBASE CLOUD
+        // ELIMINACIÓN Y RECÁLCULO AUTOMÁTICO DE FECHAS EN LA TABLA GENERAL
         function eliminarMovimientoHistorial(movId) {
             if (!esModoAdmin) return;
             const c = clientes.find(item => item.id === clienteSeleccionadoId);
@@ -1574,28 +1597,67 @@
             const idx = c.historialMovimientos.findIndex(m => m.id === movId);
             if (idx === -1) return;
 
-            if (confirm("¿Seguro que deseas eliminar y revertir este movimiento del historial?")) {
-                const mov = c.historialMovimientos[idx];
-                
-                // Revertir valores de saldo y abonado
-                c.saldo = mov.saldoAnterior;
-                if (mov.montoAbono > 0) {
+            const mov = c.historialMovimientos[idx];
+            const esCompra = mov.montoCompra > 0;
+            const esAbono = mov.montoAbono > 0;
+
+            const txtTipo = esCompra ? `COMPRA de ${fmt(mov.montoCompra)}` : `ABONO de ${fmt(mov.montoAbono)}`;
+
+            if (confirm(`¿Seguro que deseas eliminar ÚNICAMENTE este registro de ${txtTipo}?`)) {
+
+                // 1. Revertir saldo y abonado
+                if (esCompra) {
+                    c.saldo = Math.max(0, c.saldo - mov.montoCompra);
+                }
+                if (esAbono) {
+                    c.saldo = c.saldo + mov.montoAbono;
                     c.abonado = Math.max(0, c.abonado - mov.montoAbono);
                 }
 
-                // Borrar del arreglo
+                // 2. Eliminar de la lista de historial
                 c.historialMovimientos.splice(idx, 1);
-                
-                // Sincronizar inmediatamente la reversión en Firebase Firestore
+
+                // 3. RECÁLCULO AUTOMÁTICO DE FECHAS EN TABLA GENERAL
+                if (esAbono) {
+                    const abonosRestantes = c.historialMovimientos.filter(m => m.montoAbono > 0 || m.tipo === 'SOLO_ABONO' || m.tipo === 'ABONO_MANUAL');
+                    if (abonosRestantes.length > 0) {
+                        c.ultimoAbono = abonosRestantes[abonosRestantes.length - 1].fecha || "";
+                    } else {
+                        // Si ya no quedan abonos en historial, busca en base inicial o borra
+                        const baseObj = baseInicial.find(b => b.id === c.id);
+                        c.ultimoAbono = baseObj ? baseObj.ultimoAbono : "";
+                    }
+                }
+
+                if (esCompra) {
+                    const comprasRestantes = c.historialMovimientos.filter(m => m.montoCompra > 0 || m.tipo === 'SOLO_COMPRA');
+                    if (comprasRestantes.length > 0) {
+                        c.ultimaCompra = comprasRestantes[comprasRestantes.length - 1].fecha || "";
+                    } else {
+                        const baseObj = baseInicial.find(b => b.id === c.id);
+                        c.ultimaCompra = baseObj ? baseObj.ultimaCompra : "";
+                    }
+                }
+
                 guardarEnNube();
 
-                // Refrescar vistas
                 document.getElementById('inputSaldoActualEditar').value = c.saldo;
                 document.getElementById('inputTotalAbonadoEditar').value = c.abonado;
+                
+                const dtAb = parseFechaStr(c.ultimoAbono);
+                if (dtAb) {
+                    document.getElementById('inputFechaAbono').value = `${dtAb.getFullYear()}-${String(dtAb.getMonth()+1).padStart(2,'0')}-${String(dtAb.getDate()).padStart(2,'0')}`;
+                } else { document.getElementById('inputFechaAbono').value = ""; }
+
+                const dtCp = parseFechaStr(c.ultimaCompra);
+                if (dtCp) {
+                    document.getElementById('inputFechaCompra').value = `${dtCp.getFullYear()}-${String(dtCp.getMonth()+1).padStart(2,'0')}-${String(dtCp.getDate()).padStart(2,'0')}`;
+                } else { document.getElementById('inputFechaCompra').value = ""; }
+
                 renderizarHistorialSeparadoCliente(c);
                 renderTabla();
                 actualizarMetricas();
-                alert(`✅ Movimiento borrado y saldo de ${c.cliente} restablecido a ${fmt(c.saldo)} en la nube.`);
+                alert(`✅ Se borró ${txtTipo}. Fechas y saldos actualizados en la tabla general.`);
             }
         }
 
