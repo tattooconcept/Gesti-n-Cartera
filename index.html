@@ -73,7 +73,7 @@
                     <input type="file" id="inputExcelFile" accept=".xlsx, .xls, .csv" class="hidden" onchange="prepararPrevisualizacionExcel(event)">
                 </label>
 
-                <!-- NUEVA PESTAÑA BITÁCORA / REGISTRO DE MOVIMIENTOS ADMIN -->
+                <!-- PESTAÑA BITÁCORA / REGISTRO DE MOVIMIENTOS ADMIN -->
                 <button onclick="abrirModalBitacoraAdmin()" class="sec-admin hidden bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-purple-900/30 active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-clock-rotate-left text-sm"></i>
                     <span>📜 Registro de Movimientos</span>
@@ -703,7 +703,8 @@
         function cargarDatos() {
             aplicarPermisosVisuales();
 
-            const guardado = localStorage.getItem('cartera_db_v15');
+            // Cargar versión 16 limpia para resolver la prueba de Oscar Morbida
+            const guardado = localStorage.getItem('cartera_db_v16');
             if (guardado) {
                 clientes = JSON.parse(guardado);
             } else {
@@ -718,7 +719,7 @@
                 db.collection("cartera").doc("general").onSnapshot((doc) => {
                     if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
-                        localStorage.setItem('cartera_db_v15', JSON.stringify(clientes));
+                        localStorage.setItem('cartera_db_v16', JSON.stringify(clientes));
                         renderTabla();
                         actualizarMetricas();
                         renderizarTareasWidgetHoy();
@@ -732,7 +733,7 @@
         }
 
         function guardarEnNube() {
-            localStorage.setItem('cartera_db_v15', JSON.stringify(clientes));
+            localStorage.setItem('cartera_db_v16', JSON.stringify(clientes));
             if (db) {
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
@@ -1134,7 +1135,6 @@
             alert(`✅ Recibo procesado correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
         }
 
-        // LÓGICA CON RECONCILIACIÓN OFICIAL DE SALDO DESDE PLANILLA DE EXCEL
         function prepararPrevisualizacionExcel(event) {
             if (!esModoAdmin) { alert("Ingresa con tu clave de Administrador para importar planillas."); return; }
             const file = event.target.files[0];
@@ -1270,7 +1270,6 @@
             document.getElementById('modalConfirmarImportacion').classList.add('hidden');
         }
 
-        // APLICACIÓN OFICIAL REEMPLAZANDO EL SALDO ANTERIOR CON EL SALDO OFICIAL DE PLANILLA
         function aplicarImportacionConfirmada() {
             cerrarModalConfirmacion();
 
@@ -1534,6 +1533,7 @@
             document.getElementById('modalVisorImagen').classList.add('hidden');
         }
 
+        // ELIMINACIÓN CORREGIDA Y REVERSIÓN GARANTIZADA
         function eliminarMovimientoHistorial(movId) {
             if (!esModoAdmin) return;
             const c = clientes.find(item => item.id === clienteSeleccionadoId);
