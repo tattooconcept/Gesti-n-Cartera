@@ -341,7 +341,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-white">Previsualización de Importación Planilla</h3>
-                        <p class="text-xs text-slate-400">Verifica los clientes detectados antes de aplicar cambios</p>
+                        <p class="text-xs text-slate-400">El sistema actualizará el Saldo Oficial directamente desde esta planilla</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalConfirmacion()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition text-xs">
@@ -355,10 +355,10 @@
                         <tr>
                             <th class="p-3">Cliente Detectado</th>
                             <th class="p-3">Cliente Coincidente</th>
-                            <th class="p-3 text-right">Saldo Anterior</th>
+                            <th class="p-3 text-right">Saldo en App</th>
                             <th class="p-3 text-right">Compra</th>
                             <th class="p-3 text-right">Abono</th>
-                            <th class="p-3 text-right font-bold text-amber-400">Saldo Nuevo</th>
+                            <th class="p-3 text-right font-bold text-amber-400">Saldo Oficial Planilla</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyPreviewImport" class="divide-y divide-slate-800/40 font-medium">
@@ -373,7 +373,7 @@
                         Cancelar
                     </button>
                     <button onclick="aplicarImportacionConfirmada()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg shadow-emerald-900/40 active:scale-95">
-                        <i class="fa-solid fa-check mr-1"></i> Confirmar y Aplicar Cambios
+                        <i class="fa-solid fa-check mr-1"></i> Sincronizar y Aplicar Saldo Oficial
                     </button>
                 </div>
             </div>
@@ -388,8 +388,8 @@
                     <i class="fa-solid fa-file-circle-check"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-bold text-white">Resumen de Importación Aplicada</h3>
-                    <p class="text-xs text-slate-400">Comparativa de Saldo Anterior vs Saldo Nuevo</p>
+                    <h3 class="text-base font-bold text-white">Sincronización de Planilla Aplicada</h3>
+                    <p class="text-xs text-slate-400">Se han actualizado los Saldos Oficiales y Fechas en la Nube</p>
                 </div>
             </div>
 
@@ -400,7 +400,7 @@
                             <th class="p-3">Cliente</th>
                             <th class="p-3 text-right">Saldo Anterior</th>
                             <th class="p-3 text-right text-emerald-400">Movimientos Aplicados</th>
-                            <th class="p-3 text-right font-bold text-amber-400">Saldo Nuevo</th>
+                            <th class="p-3 text-right font-bold text-amber-400">Nuevo Saldo Oficial</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyResumenFinal" class="divide-y divide-slate-800/40 font-medium">
@@ -414,16 +414,16 @@
         </div>
     </div>
 
-    <!-- Modal Visor de Imagen de Factura -->
-    <div id="modalVisorImagen" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-        <div class="glass-card bg-slate-900 border border-slate-700/80 p-5 rounded-3xl max-w-2xl w-full shadow-2xl space-y-3">
+    <!-- Modal Visor de Imagen de Factura (Z-INDEX 9999) -->
+    <div id="modalVisorImagen" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md hidden flex items-center justify-center p-4 z-[9999]">
+        <div class="glass-card bg-slate-900 border border-slate-700/80 p-5 rounded-3xl max-w-3xl w-full shadow-2xl space-y-3">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-image text-amber-400 mr-2"></i>Foto de Factura Almacenada</h3>
-                <button onclick="document.getElementById('modalVisorImagen').classList.add('hidden')" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs">
+                <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-image text-amber-400 mr-2"></i>Foto del Recibo / Factura</h3>
+                <button onclick="cerrarVisorImagenModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div class="flex justify-center p-2 bg-slate-950 rounded-2xl border border-slate-800 max-h-[70vh] overflow-auto">
+            <div class="flex justify-center p-2 bg-slate-950 rounded-2xl border border-slate-800 max-h-[75vh] overflow-auto">
                 <img id="imgFacturaVisor" src="" alt="Factura" class="max-w-full rounded-xl object-contain">
             </div>
         </div>
@@ -648,8 +648,7 @@
         function cargarDatos() {
             aplicarPermisosVisuales();
 
-            // Cargar base local de inmediato
-            const guardado = localStorage.getItem('cartera_db_v12');
+            const guardado = localStorage.getItem('cartera_db_v14');
             if (guardado) {
                 clientes = JSON.parse(guardado);
             } else {
@@ -660,12 +659,11 @@
             actualizarMetricas();
             renderizarTareasWidgetHoy();
 
-            // Sincronizar en tiempo real con Firebase Firestore
             if (db) {
                 db.collection("cartera").doc("general").onSnapshot((doc) => {
                     if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
-                        localStorage.setItem('cartera_db_v12', JSON.stringify(clientes));
+                        localStorage.setItem('cartera_db_v14', JSON.stringify(clientes));
                         renderTabla();
                         actualizarMetricas();
                         renderizarTareasWidgetHoy();
@@ -679,7 +677,7 @@
         }
 
         function guardarEnNube() {
-            localStorage.setItem('cartera_db_v12', JSON.stringify(clientes));
+            localStorage.setItem('cartera_db_v14', JSON.stringify(clientes));
             if (db) {
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
@@ -1001,7 +999,7 @@
             alert(`✅ Recibo procesado correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
         }
 
-        // LÓGICA CORREGIDA Y MEJORADA PARA IMPORTACIÓN DE PLANILLA (COMPRA VS ABONO)
+        // LÓGICA CON RECONCILIACIÓN OFICIAL DE SALDO DESDE PLANILLA DE EXCEL
         function prepararPrevisualizacionExcel(event) {
             if (!esModoAdmin) { alert("Ingresa con tu clave de Administrador para importar planillas."); return; }
             const file = event.target.files[0];
@@ -1018,7 +1016,7 @@
 
                 if (jsonRows.length < 2) { alert("Planilla vacía"); return; }
 
-                let colFecha = -1, colCliente = -1, colCompra = -1, colAbono = -1, colSaldoActual = -1;
+                let colFecha = -1, colCliente = -1, colCompra = -1, colAbono = -1, colSaldoOficial = -1;
                 
                 for (let i = 0; i < Math.min(5, jsonRows.length); i++) {
                     const row = jsonRows[i];
@@ -1029,15 +1027,15 @@
                         if (str.includes('CLIENTE')) colCliente = colIdx;
                         if (str.includes('COMPRA') || str.includes('FACTURA')) colCompra = colIdx;
                         if (str.includes('ABONO')) colAbono = colIdx;
-                        if (str.includes('SALDO ACTUAL')) colSaldoActual = colIdx;
+                        if (str.includes('SALDO') || str.includes('VALOR A COBRAR') || str.includes('DEUDA')) colSaldoOficial = colIdx;
                     });
                 }
 
                 if (colFecha === -1) colFecha = 0;
                 if (colCliente === -1) colCliente = 1;
                 if (colCompra === -1) colCompra = 2;
-                if (colAbono === -1) colAbono = 5;
-                if (colSaldoActual === -1) colSaldoActual = 7;
+                if (colAbono === -1) colAbono = 6;
+                if (colSaldoOficial === -1) colSaldoOficial = 1;
 
                 listaCambiosPendientesImportacion = [];
                 const mapClientes = {};
@@ -1077,18 +1075,14 @@
                         abonoNum = parseFloat(cleanA) || 0;
                     }
 
-                    let rawSaldo = row[colSaldoActual];
-                    let saldoNuevoCalculado = targetClient ? targetClient.saldo : 0;
+                    let rawSaldo = row[colSaldoOficial];
+                    let saldoOficialPlanilla = targetClient ? targetClient.saldo : 0;
                     if (rawSaldo !== undefined && rawSaldo !== null) {
                         let cleanS = rawSaldo.toString().replace(/\$/g, '').replace(/\s/g, '').replace(/\./g, '').replace(/,/g, '.').replace('-', '0');
                         let parsedS = parseFloat(cleanS);
                         if (!isNaN(parsedS) && parsedS >= 0) {
-                            saldoNuevoCalculado = parsedS;
-                        } else if (targetClient) {
-                            saldoNuevoCalculado = Math.max(0, targetClient.saldo + compraNum - abonoNum);
+                            saldoOficialPlanilla = parsedS;
                         }
-                    } else if (targetClient) {
-                        saldoNuevoCalculado = Math.max(0, targetClient.saldo + compraNum - abonoNum);
                     }
 
                     let rawFecha = row[colFecha];
@@ -1103,10 +1097,10 @@
                     listaCambiosPendientesImportacion.push({
                         clienteDetectado: rawCliente,
                         targetClient: targetClient,
-                        saldoAnterior: targetClient ? targetClient.saldo : 0,
+                        saldoAnteriorApp: targetClient ? targetClient.saldo : 0,
                         compraNum: compraNum,
                         abonoNum: abonoNum,
-                        saldoNuevo: saldoNuevoCalculado,
+                        saldoOficialPlanilla: saldoOficialPlanilla,
                         fecha: fechaFormateada
                     });
                 }
@@ -1122,10 +1116,10 @@
                         <td class="p-3 font-bold ${item.targetClient ? 'text-indigo-400' : 'text-rose-400'}">
                             ${item.targetClient ? item.targetClient.cliente : '❌ Sin coincidencia'}
                         </td>
-                        <td class="p-3 text-right font-semibold text-slate-400">${fmt(item.saldoAnterior)}</td>
+                        <td class="p-3 text-right font-semibold text-slate-400">${fmt(item.saldoAnteriorApp)}</td>
                         <td class="p-3 text-right font-bold text-amber-400">${item.compraNum > 0 ? fmt(item.compraNum) : '-'}</td>
                         <td class="p-3 text-right font-bold text-emerald-400">${item.abonoNum > 0 ? fmt(item.abonoNum) : '-'}</td>
-                        <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoNuevo)}</td>
+                        <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoOficialPlanilla)}</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -1141,7 +1135,7 @@
             document.getElementById('modalConfirmarImportacion').classList.add('hidden');
         }
 
-        // APLICACIÓN OFICIAL DE PLANILLA ACTUALIZANDO FECHAS DE COMPRA Y ABONO SEPARADAMENTE
+        // APLICACIÓN OFICIAL REEMPLAZANDO EL SALDO ANTERIOR CON EL SALDO OFICIAL DE PLANILLA
         function aplicarImportacionConfirmada() {
             cerrarModalConfirmacion();
 
@@ -1150,17 +1144,16 @@
 
             listaCambiosPendientesImportacion.forEach(item => {
                 if (item.targetClient) {
-                    const saldoAnt = item.targetClient.saldo;
+                    const saldoAntApp = item.targetClient.saldo;
                     const abonadoAnt = item.targetClient.abonado;
 
-                    item.targetClient.saldo = item.saldoNuevo;
+                    // SOBRESCRIBIR CON EL SALDO OFICIAL PROVENIENTE DEL EXCEL (RECONCILIACIÓN SANADA)
+                    item.targetClient.saldo = item.saldoOficialPlanilla;
 
-                    // Actualizar compras e historia
                     if (item.compraNum > 0) {
                         if (item.fecha) item.targetClient.ultimaCompra = item.fecha;
                     }
 
-                    // Actualizar abonos e historia
                     if (item.abonoNum > 0) {
                         item.targetClient.abonado += item.abonoNum;
                         if (item.fecha) item.targetClient.ultimoAbono = item.fecha;
@@ -1168,31 +1161,26 @@
 
                     if (!item.targetClient.historialMovimientos) item.targetClient.historialMovimientos = [];
                     
-                    let detalleTexto = "Importación Planilla";
-                    if (item.compraNum > 0 && item.abonoNum > 0) detalleTexto = "Planilla: Compra + Abono";
-                    else if (item.compraNum > 0) detalleTexto = "Planilla: Nueva Compra";
-                    else if (item.abonoNum > 0) detalleTexto = "Planilla: Abono";
-
                     item.targetClient.historialMovimientos.push({
                         id: Date.now() + Math.random(),
                         tipo: "IMPORTACION_PLANILLA",
                         montoCompra: item.compraNum,
                         montoAbono: item.abonoNum,
-                        saldoAnterior: saldoAnt,
-                        saldoNuevo: item.saldoNuevo,
+                        saldoAnterior: saldoAntApp,
+                        saldoNuevo: item.saldoOficialPlanilla,
                         abonadoAnterior: abonadoAnt,
                         abonadoNuevo: item.targetClient.abonado,
                         fecha: item.fecha || formatFechaObj(new Date()),
-                        detalle: detalleTexto
+                        detalle: "Reconciliación Saldo Oficial Planilla Excel"
                     });
 
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-slate-800/40";
                     tr.innerHTML = `
                         <td class="p-3 font-bold text-white">${item.targetClient.cliente}</td>
-                        <td class="p-3 text-right font-semibold text-slate-400">${fmt(saldoAnt)}</td>
+                        <td class="p-3 text-right font-semibold text-slate-400">${fmt(saldoAntApp)}</td>
                         <td class="p-3 text-right font-bold text-emerald-400">+C: ${fmt(item.compraNum)} | -A: ${fmt(item.abonoNum)}</td>
-                        <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoNuevo)}</td>
+                        <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoOficialPlanilla)}</td>
                     `;
                     tbodyFinal.appendChild(tr);
                 }
@@ -1369,8 +1357,8 @@
                             <span class="text-[10px] text-slate-400">Monto: ${fmt(m.montoCompra)} (${m.fecha})</span>
                         </div>
                         <div class="flex gap-1.5">
-                            ${m.imagenFactura ? `<button onclick="verImagenFacturaModal('${m.imagenFactura}')" class="bg-amber-600/30 hover:bg-amber-600 text-amber-300 px-2 py-1 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-eye"></i></button>` : ''}
-                            ${esModoAdmin ? `<button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                            ${m.imagenFactura ? `<button onclick="verImagenFacturaModalByMovId(${m.id})" class="bg-amber-600/30 hover:bg-amber-600 text-amber-300 px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"><i class="fa-solid fa-eye"></i></button>` : ''}
+                            ${esModoAdmin ? `<button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                         </div>
                     `;
                     divC.appendChild(item);
@@ -1388,16 +1376,28 @@
                             <span class="font-bold text-emerald-400 block">${m.detalle || "Abono"}</span>
                             <span class="text-[10px] text-slate-400">Monto: ${fmt(m.montoAbono)} (${m.fecha})</span>
                         </div>
-                        ${esModoAdmin ? `<button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                        ${esModoAdmin ? `<button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     `;
                     divA.appendChild(item);
                 });
             }
         }
 
-        function verImagenFacturaModal(imgBase64) {
-            document.getElementById('imgFacturaVisor').src = imgBase64;
-            document.getElementById('modalVisorImagen').classList.remove('hidden');
+        function verImagenFacturaModalByMovId(movId) {
+            const c = clientes.find(item => item.id === clienteSeleccionadoId);
+            if (!c || !c.historialMovimientos) return;
+
+            const mov = c.historialMovimientos.find(m => m.id === movId);
+            if (mov && mov.imagenFactura) {
+                document.getElementById('imgFacturaVisor').src = mov.imagenFactura;
+                document.getElementById('modalVisorImagen').classList.remove('hidden');
+            } else {
+                alert("No se encontró la foto adjunta de este recibo.");
+            }
+        }
+
+        function cerrarVisorImagenModal() {
+            document.getElementById('modalVisorImagen').classList.add('hidden');
         }
 
         function eliminarMovimientoHistorial(movId) {
