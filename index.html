@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Cartera Pro - Tattoo Concept</title>
     
-    <!-- Libraries CDN -->
+    <!-- CDN Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -43,19 +43,16 @@
                     </div>
                     <div>
                         <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">Gestión de Cartera Pro</h1>
-                        <p class="text-slate-400 text-xs font-medium">Lector OCR de 3 Escenarios de Facturas, Historial Eliminable y Control de Cobros</p>
+                        <p class="text-slate-400 text-xs font-medium">Tablero de Tareas del Día, OCR Inteligente, Historiales e Imágenes Almacenadas</p>
                     </div>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2.5 w-full lg:w-auto">
-                
-                <!-- BOTÓN CARGAR FACTURAS -->
                 <button onclick="abrirModalFacturas()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-amber-900/30 active:scale-95">
                     <i class="fa-solid fa-file-invoice-dollar text-sm"></i>
                     <span>Cargar Factura / Foto</span>
                 </button>
 
-                <!-- BOTÓN IMPORTAR PLANILLA EXCEL -->
                 <label class="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-indigo-900/30 active:scale-95">
                     <i class="fa-solid fa-file-import text-sm"></i>
                     <span>Cargar Planilla General</span>
@@ -70,6 +67,36 @@
                     <i class="fa-solid fa-rotate-left"></i>
                     <span>Restablecer</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- WIDGET SUPERIOR DE TAREAS DEL DÍA CON BARRA DE PROGRESO DE 0 A 100% -->
+        <div class="glass-card p-5 rounded-3xl border-t-2 border-indigo-500/60 space-y-3">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                        <i class="fa-solid fa-calendar-check text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Tareas & Cobros Agendados para Hoy</h3>
+                        <p id="txtFechaHoyWidget" class="text-[11px] text-slate-400 font-medium"></p>
+                    </div>
+                </div>
+                <!-- Barra de Progreso -->
+                <div class="w-full md:w-72 space-y-1">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span class="text-slate-400">Progreso del Día:</span>
+                        <span id="txtPorcentajeTareas" class="text-indigo-400">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                        <div id="barProgresoTareas" class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desplegable / Contenedor de Tareas -->
+            <div id="contenedorTareasHoy" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto custom-scrollbar pt-1">
+                <!-- Se llena dinámicamente con JS -->
             </div>
         </div>
 
@@ -132,6 +159,7 @@
                     <option value="TODOS">🔍 Todos los clientes</option>
                     <option value="PROXIMOS">⏰ Próximos a Cobrar (En Agenda)</option>
                     <option value="COBRAR_MANANA">🚨 Cobrar Mañana / Próximo Día</option>
+                    <option value="SIN_RESPUESTA">📱 Sin Respuesta (Reescribir en 5 días)</option>
                     <option value="CON_ACUERDO">🤝 Con Acuerdo de Pago</option>
                     <option value="INACTIVOS_30">⚠️ Sin movimiento +30 días</option>
                     <option value="CON_SALDO">💰 Con Saldo Pendiente</option>
@@ -152,7 +180,7 @@
                             <th class="p-3.5 text-center font-bold">Último Abono</th>
                             <th class="p-3.5 text-center font-bold">Última Compra</th>
                             <th class="p-3.5 text-center font-bold">Estado & Próximo Cobro</th>
-                            <th class="p-3.5 text-center font-bold">Acuerdo de Pago</th>
+                            <th class="p-3.5 text-center font-bold">Acuerdo / Seguimiento</th>
                             <th class="p-3.5 text-center font-bold">Acción</th>
                         </tr>
                     </thead>
@@ -164,7 +192,7 @@
 
     </div>
 
-    <!-- Modal Cargar Facturas (3 Escenarios + OCR + Previsualización) -->
+    <!-- Modal Cargar Facturas (Soporta OCR, 3 Escenarios e Imágenes Guardadas) -->
     <div id="modalFacturas" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
         <div class="glass-card bg-slate-900/95 border border-slate-700/80 p-6 rounded-3xl max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -173,8 +201,8 @@
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white">Procesador de Factura(s)</h3>
-                        <p class="text-xs text-slate-400">Escaneo de foto u opción manual para los 3 escenarios</p>
+                        <h3 class="text-base font-bold text-white">Procesador de Factura(s) / Foto</h3>
+                        <p class="text-xs text-slate-400">Sugerencia inteligente de cliente y escaneo OCR de la foto</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalFacturas()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition text-xs">
@@ -182,7 +210,7 @@
                 </button>
             </div>
 
-            <!-- Paso 1: Subir Foto OCR o Seleccionar Cliente -->
+            <!-- Subir Foto OCR -->
             <div class="p-3.5 bg-amber-950/20 border border-amber-800/40 rounded-2xl space-y-2">
                 <span class="text-[11px] font-bold text-amber-300 block uppercase tracking-wider">📷 Subir Foto de la Factura (Escaneo OCR)</span>
                 <label class="cursor-pointer border border-dashed border-amber-500/50 hover:border-amber-400 p-2.5 rounded-xl flex items-center justify-center gap-2 bg-slate-950/60 transition">
@@ -195,9 +223,15 @@
                 </p>
             </div>
 
+            <!-- Sugerencias Inteligentes de Clientes Detectados en la Imagen -->
+            <div id="boxSugerenciasClientes" class="hidden p-2.5 bg-indigo-950/30 border border-indigo-800/40 rounded-2xl space-y-1">
+                <span class="text-[10px] font-bold text-indigo-300 uppercase block">💡 Cliente sugerido por OCR:</span>
+                <div id="listaSugerencias" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
             <!-- Buscador y Selector de Cliente -->
             <div class="space-y-1">
-                <label class="block text-[10px] font-bold uppercase text-slate-300">🔍 Confirmar o Buscar Cliente</label>
+                <label class="block text-[10px] font-bold uppercase text-slate-300">🔍 Buscar y Confirmar Cliente</label>
                 <div class="relative">
                     <i class="fa-solid fa-user-tag absolute left-3.5 top-2.5 text-slate-500 text-xs"></i>
                     <input type="text" id="inputBuscarClienteFactura" oninput="filtrarDropdownClienteFactura()" placeholder="Escribe el nombre del cliente..." class="w-full bg-slate-950 text-amber-400 font-bold text-xs pl-9 pr-4 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
@@ -206,17 +240,16 @@
                 </select>
             </div>
 
-            <!-- Paso 2: Selección del Tipo de Factura / Escenario -->
+            <!-- Escenario / Tipo de Factura -->
             <div class="space-y-1">
-                <label class="block text-[10px] font-bold uppercase text-amber-400">⚙️ Tipo de Factura / Operación</label>
+                <label class="block text-[10px] font-bold uppercase text-amber-400">⚙️ Tipo de Operación</label>
                 <select id="selectTipoEscenarioFactura" onchange="actualizarCamposEscenario(); recalcularPreviewFactura();" class="w-full bg-slate-950 text-slate-100 text-xs p-2.5 rounded-xl border border-slate-800 font-bold focus:outline-none focus:border-amber-500">
-                    <option value="SOLO_ABONO">1. 🟢 Solo Abono (El cliente paga un valor y reduce su saldo)</option>
-                    <option value="SOLO_COMPRA">2. 🟠 Solo Compra / Nueva Factura (Incrementa el saldo del cliente)</option>
-                    <option value="COMPRA_Y_ABONO">3. 🔵 Compra + Abono Simultáneo (Factura nueva con abono inmediato)</option>
+                    <option value="SOLO_ABONO">1. 🟢 Solo Abono (Disminuye saldo del cliente)</option>
+                    <option value="SOLO_COMPRA">2. 🟠 Solo Compra / Factura Nueva (Incrementa saldo del cliente)</option>
+                    <option value="COMPRA_Y_ABONO">3. 🔵 Compra + Abono Simultáneo (Suma compra y descuenta abono)</option>
                 </select>
             </div>
 
-            <!-- Campos Dinámicos según Escenario -->
             <div class="grid grid-cols-2 gap-3">
                 <div id="boxMontoCompra">
                     <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Monto Compra (COP)</label>
@@ -230,16 +263,16 @@
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Fecha Movimiento</label>
+                    <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">Fecha Movimiento (Hoy por defecto)</label>
                     <input type="date" id="inputFacturaFecha" onchange="recalcularPreviewFactura()" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-300 mb-1">N° Factura / Alegra (Opcional)</label>
-                    <input type="text" id="inputFacturaNum" placeholder="Ej: Factura A10084" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                    <input type="text" id="inputFacturaNum" placeholder="Ej: A10084" class="w-full bg-slate-950 text-slate-200 text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
                 </div>
             </div>
 
-            <!-- Cuadro de Previsualización en Tiempo Real -->
+            <!-- Previsualización del Saldo Resultante -->
             <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl text-xs space-y-1">
                 <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">📊 Previsualización del Saldo Resultante:</span>
                 <div class="flex justify-between text-slate-400">
@@ -271,7 +304,7 @@
                         <i class="fa-solid fa-list-check"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white">Previsualización de Importación</h3>
+                        <h3 class="text-base font-bold text-white">Previsualización de Importación Planilla</h3>
                         <p class="text-xs text-slate-400">Verifica los clientes detectados antes de aplicar cambios</p>
                     </div>
                 </div>
@@ -344,16 +377,31 @@
         </div>
     </div>
 
-    <!-- Modal Gestionar Cliente e HISTORIAL COMPLETO DE MOVIMIENTOS ELIMINABLES -->
+    <!-- Modal Visor de Imagen de Factura -->
+    <div id="modalVisorImagen" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="glass-card bg-slate-900 border border-slate-700/80 p-5 rounded-3xl max-w-2xl w-full shadow-2xl space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-image text-amber-400 mr-2"></i>Foto de Factura Almacenada</h3>
+                <button onclick="document.getElementById('modalVisorImagen').classList.add('hidden')" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="flex justify-center p-2 bg-slate-950 rounded-2xl border border-slate-800 max-h-[70vh] overflow-auto">
+                <img id="imgFacturaVisor" src="" alt="Factura" class="max-w-full rounded-xl object-contain">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gestionar Cliente: HISTORIAL SEPARADO DE COMPRAS Y ABONOS + GALERÍA FOTOS -->
     <div id="modalAbono" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50 transition-all">
-        <div class="glass-card bg-slate-900/95 border border-slate-700/60 p-6 rounded-3xl max-w-lg w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div class="glass-card bg-slate-900/95 border border-slate-700/60 p-6 rounded-3xl max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                         <i class="fa-solid fa-sliders text-sm"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white">Gestión Avanzada</h3>
+                        <h3 class="text-base font-bold text-white">Gestión de Cliente</h3>
                         <p id="modalClienteNombre" class="text-xs font-semibold text-indigo-400"></p>
                     </div>
                 </div>
@@ -385,8 +433,9 @@
                     </div>
                 </div>
 
+                <!-- Módulo de Acuerdos de Pago & Check "Sin Respuesta" -->
                 <div class="p-3 bg-indigo-950/20 border border-indigo-800/40 rounded-2xl space-y-2.5">
-                    <span class="text-[11px] font-bold text-indigo-300 block uppercase tracking-wider">🤝 Configurar Acuerdo de Pago</span>
+                    <span class="text-[11px] font-bold text-indigo-300 block uppercase tracking-wider">🤝 Configurar Acuerdo o Seguimiento</span>
                     <div class="grid grid-cols-2 gap-2.5">
                         <div>
                             <label class="block text-[10px] text-slate-400 font-semibold mb-1">Fecha Compromiso</label>
@@ -396,6 +445,10 @@
                             <label class="block text-[10px] text-slate-400 font-semibold mb-1">Nota / Detalle Acuerdo</label>
                             <input type="text" id="inputNotaAcuerdo" placeholder="Ej: Paga $100k quincenal" class="w-full bg-slate-900 text-slate-200 text-xs p-2 rounded-xl border border-slate-800 focus:outline-none focus:border-indigo-500">
                         </div>
+                    </div>
+                    <div class="flex items-center gap-2 pt-1 border-t border-indigo-900/40">
+                        <input type="checkbox" id="chkSinRespuesta" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-rose-500 focus:ring-rose-500 cursor-pointer">
+                        <label for="chkSinRespuesta" class="text-xs font-bold text-rose-300 cursor-pointer">📱 No respondió mensaje (Reescribir automáticamente en 5 días)</label>
                     </div>
                 </div>
 
@@ -413,11 +466,15 @@
                     </div>
                 </div>
 
-                <!-- HISTORIAL DETALLADO DE MOVIMIENTOS CON BOTÓN ELIMINAR CADA UNO -->
+                <!-- PESTAÑAS DE HISTORIAL SEPARADO DE COMPRAS Y ABONOS -->
                 <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2">
-                    <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">📜 Historial de Movimientos Registrados</span>
-                    <div id="listaHistorialMovimientos" class="space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar">
+                    <div class="flex border-b border-slate-800 text-xs">
+                        <button id="btnTabHistCompras" onclick="cambiarTabHistorial('COMPRAS')" class="w-1/2 py-1.5 border-b-2 border-amber-500 font-bold text-amber-400">🛍️ Compras (<span id="cntCompras">0</span>)</button>
+                        <button id="btnTabHistAbonos" onclick="cambiarTabHistorial('ABONOS')" class="w-1/2 py-1.5 border-b-2 border-transparent font-semibold text-slate-400 hover:text-white">🟢 Abonos (<span id="cntAbonos">0</span>)</button>
                     </div>
+
+                    <div id="secHistCompras" class="space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar"></div>
+                    <div id="secHistAbonos" class="hidden space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar"></div>
                 </div>
             </div>
 
@@ -436,6 +493,7 @@
         let clientes = [];
         let clienteSeleccionadoId = null;
         let listaCambiosPendientesImportacion = [];
+        let imagenBase64TemporalOCR = null;
 
         const aliasMap = {
             'TANAKA': 'ALEJANDRA ARIAS TANAKA',
@@ -476,6 +534,14 @@
             return `${dia}/${mes}/${anio}`;
         }
 
+        function getHoyFormateado() {
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
         function obtenerInfoCobro(c) {
             const dtAbono = parseFechaStr(c.ultimoAbono);
             const dtCompra = parseFechaStr(c.ultimaCompra);
@@ -512,6 +578,12 @@
         function calcularProximoCobroBadge(c) {
             const info = obtenerInfoCobro(c);
 
+            if (c.sinRespuesta) {
+                const dtF = parseFechaStr(c.acuerdoFecha);
+                const strF = dtF ? formatFechaObj(dtF) : c.acuerdoFecha;
+                return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">📱 Reescribir en 5 días (${strF})</span>`;
+            }
+
             if (!info.fechaReferencia) {
                 return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Cobrar Nuevamente</span>`;
             }
@@ -533,6 +605,8 @@
             localStorage.removeItem('cartera_db_v2');
             localStorage.removeItem('cartera_db_v4');
             localStorage.removeItem('cartera_db_v5');
+            localStorage.removeItem('cartera_db_v8');
+            localStorage.removeItem('cartera_db_v9');
 
             const guardado = localStorage.getItem('cartera_db_v10');
             if (guardado) {
@@ -543,11 +617,74 @@
                     if (!c.historialMovimientos) c.historialMovimientos = [];
                     if (!c.acuerdoFecha) c.acuerdoFecha = "";
                     if (!c.acuerdoNota) c.acuerdoNota = "";
+                    if (c.sinRespuesta === undefined) c.sinRespuesta = false;
                 });
             }
             renderTabla();
             actualizarMetricas();
+            renderizarTareasWidgetHoy();
             poblarSelectClientesFactura();
+        }
+
+        // RENDERIZAR WIDGET DE TAREAS Y COBROS DE HOY CON BARRA DE PROGRESO 0-100%
+        function renderizarTareasWidgetHoy() {
+            const hoy = new Date();
+            document.getElementById('txtFechaHoyWidget').innerText = `Hoy: ${formatFechaObj(hoy)}`;
+
+            const contenedor = document.getElementById('contenedorTareasHoy');
+            contenedor.innerHTML = '';
+
+            // Filtrar clientes pendientes de cobro/acuerdo para hoy o atrasados
+            const clientesTareas = clientes.filter(c => {
+                if (c.saldo <= 0) return false;
+                const info = obtenerInfoCobro(c);
+                const tieneAcuerdoHoy = c.acuerdoFecha !== "";
+                const esCobroHoy = info.diasParaProximo <= 1 || info.difDias <= 15;
+                return tieneAcuerdoHoy || esCobroHoy || c.sinRespuesta;
+            });
+
+            if (clientesTareas.length === 0) {
+                contenedor.innerHTML = `<span class="text-xs text-slate-500 italic col-span-full">🎉 No hay cobros ni compromisos pendientes programados para hoy</span>`;
+                document.getElementById('txtPorcentajeTareas').innerText = "100%";
+                document.getElementById('barProgresoTareas').style.width = "100%";
+                return;
+            }
+
+            let completadasCount = 0;
+
+            clientesTareas.forEach(c => {
+                if (c.tareaCompletadaHoy) completadasCount++;
+
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `p-2.5 rounded-2xl border transition flex items-center justify-between ${c.tareaCompletadaHoy ? 'bg-slate-950/40 border-slate-800 opacity-60' : 'bg-slate-900 border-indigo-500/30'}`;
+
+                cardDiv.innerHTML = `
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <input type="checkbox" ${c.tareaCompletadaHoy ? 'checked' : ''} onchange="toggleTareaCompletadaHoy(${c.id})" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
+                        <div class="truncate">
+                            <span class="font-bold text-xs ${c.tareaCompletadaHoy ? 'line-through text-slate-500' : 'text-white'} block truncate">${c.cliente}</span>
+                            <span class="text-[10px] text-amber-400 font-semibold">${fmt(c.saldo)}</span>
+                        </div>
+                    </div>
+                    <button onclick="abrirModal(${c.id})" class="text-[10px] bg-indigo-600/20 text-indigo-300 hover:text-white px-2 py-1 rounded-lg border border-indigo-500/30 font-bold active:scale-95">
+                        Cobrar
+                    </button>
+                `;
+                contenedor.appendChild(cardDiv);
+            });
+
+            const pct = Math.round((completadasCount / clientesTareas.length) * 100);
+            document.getElementById('txtPorcentajeTareas').innerText = `${pct}%`;
+            document.getElementById('barProgresoTareas').style.width = `${pct}%`;
+        }
+
+        function toggleTareaCompletadaHoy(id) {
+            const c = clientes.find(item => item.id === id);
+            if (!c) return;
+
+            c.tareaCompletadaHoy = !c.tareaCompletadaHoy;
+            localStorage.setItem('cartera_db_v10', JSON.stringify(clientes));
+            renderizarTareasWidgetHoy();
         }
 
         function poblarSelectClientesFactura() {
@@ -561,6 +698,7 @@
                 if (idx === 0) opt.selected = true;
                 select.appendChild(opt);
             });
+            document.getElementById('inputFacturaFecha').value = getHoyFormateado();
             recalcularPreviewFactura();
         }
 
@@ -642,6 +780,13 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            // Guardar imagen temporalmente en base64
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                imagenBase64TemporalOCR = e.target.result;
+            };
+            fileReader.readAsDataURL(file);
+
             document.getElementById('lblImagenFactura').innerText = `Foto cargada: ${file.name}`;
             const statusOCR = document.getElementById('statusOCR');
             statusOCR.classList.remove('hidden');
@@ -650,22 +795,38 @@
                 logger: m => console.log(m)
             }).then(({ data: { text } }) => {
                 statusOCR.classList.add('hidden');
-                console.log("Texto extraído de foto:", text);
 
                 const textUpper = text.toUpperCase();
-                let clienteEncontrado = null;
+                const coincidenciaClientes = [];
 
                 clientes.forEach(c => {
                     if (textUpper.includes(c.cliente.toUpperCase())) {
-                        clienteEncontrado = c;
+                        coincidenciaClientes.push(c);
                     }
                 });
 
-                if (clienteEncontrado) {
-                    document.getElementById('inputBuscarClienteFactura').value = clienteEncontrado.cliente;
-                    filtrarDropdownClienteFactura();
+                // Mostrar Botones de Sugerencia Inteligente
+                const boxSug = document.getElementById('boxSugerenciasClientes');
+                const listaSug = document.getElementById('listaSugerencias');
+                listaSug.innerHTML = '';
+
+                if (coincidenciaClientes.length > 0) {
+                    boxSug.classList.remove('hidden');
+                    coincidenciaClientes.forEach(c => {
+                        const btn = document.createElement('button');
+                        btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition shadow";
+                        btn.innerText = `👉 Confirmar: ${c.cliente}`;
+                        btn.onclick = function() {
+                            document.getElementById('inputBuscarClienteFactura').value = c.cliente;
+                            filtrarDropdownClienteFactura();
+                        };
+                        listaSug.appendChild(btn);
+                    });
+                } else {
+                    boxSug.classList.add('hidden');
                 }
 
+                // Detectar montos
                 const matches = text.match(/\$?(\d{1,3}(\.\d{3})*|\d{4,7})/g);
                 if (matches && matches.length > 0) {
                     let maxVal = 0;
@@ -685,10 +846,10 @@
                 }
 
                 recalcularPreviewFactura();
-                alert("📷 Foto analizada con éxito. Revisa el cliente y montos sugeridos.");
+                alert("📷 Foto analizada con éxito. Se generaron las sugerencias de clientes y montos.");
             }).catch(err => {
                 statusOCR.classList.add('hidden');
-                alert("No se pudo extraer texto de la foto automáticamente, pero puedes seleccionar el cliente y monto manualmente.");
+                alert("Foto cargada correctamente. Selecciona el cliente y verifica los montos.");
             });
         }
 
@@ -749,14 +910,18 @@
                 abonadoAnterior: abonadoAnterior,
                 abonadoNuevo: c.abonado,
                 fecha: fechaStr,
-                detalle: numFactura ? `Factura #${numFactura}` : "Factura / Transacción"
+                detalle: numFactura ? `Factura #${numFactura}` : "Factura / Transacción",
+                imagenFactura: imagenBase64TemporalOCR || null
             });
 
+            imagenBase64TemporalOCR = null;
+            document.getElementById('boxSugerenciasClientes').classList.add('hidden');
             localStorage.setItem('cartera_db_v10', JSON.stringify(clientes));
 
             cerrarModalFacturas();
             renderTabla();
             actualizarMetricas();
+            renderizarTareasWidgetHoy();
             alert(`✅ Factura procesada correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
         }
 
@@ -931,6 +1096,7 @@
             document.getElementById('modalResultadoImportacion').classList.remove('hidden');
             renderTabla();
             actualizarMetricas();
+            renderizarTareasWidgetHoy();
         }
 
         function renderTabla() {
@@ -948,6 +1114,7 @@
                 if (filtro === 'PAZ_Y_SALVO') return coincideNombre && c.saldo === 0;
                 if (filtro === 'PROXIMOS') return coincideNombre && c.saldo > 0 && info.difDias <= 15;
                 if (filtro === 'COBRAR_MANANA') return coincideNombre && c.saldo > 0 && info.diasParaProximo <= 1;
+                if (filtro === 'SIN_RESPUESTA') return coincideNombre && c.sinRespuesta;
                 if (filtro === 'CON_ACUERDO') return coincideNombre && c.acuerdoFecha !== "";
                 if (filtro === 'INACTIVOS_30') return coincideNombre && c.saldo > 0 && info.difDias > 30;
 
@@ -956,7 +1123,9 @@
 
             filtrados.forEach(c => {
                 let acuerdoBadge = `<span class="text-slate-600 text-[10px]">-</span>`;
-                if (c.acuerdoFecha) {
+                if (c.sinRespuesta) {
+                    acuerdoBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/30">📱 Sin Respuesta</span>`;
+                } else if (c.acuerdoFecha) {
                     const dtA = parseFechaStr(c.acuerdoFecha);
                     const strA = dtA ? formatFechaObj(dtA) : c.acuerdoFecha;
                     acuerdoBadge = `
@@ -1021,6 +1190,7 @@
             document.getElementById('inputSaldoActualEditar').value = c.saldo;
             document.getElementById('inputTotalAbonadoEditar').value = c.abonado;
             document.getElementById('inputMontoAbono').value = '';
+            document.getElementById('chkSinRespuesta').checked = c.sinRespuesta || false;
             
             document.getElementById('inputNotaAcuerdo').value = c.acuerdoNota || '';
             const dtAcuerdo = parseFechaStr(c.acuerdoFecha);
@@ -1029,7 +1199,7 @@
                 const mm = String(dtAcuerdo.getMonth() + 1).padStart(2, '0');
                 const dd = String(dtAcuerdo.getDate()).padStart(2, '0');
                 document.getElementById('inputFechaAcuerdo').value = `${yyyy}-${mm}-${dd}`;
-            } else { document.getElementById('inputFechaAcuerdo').value = ''; }
+            } else { document.getElementById('inputFechaAcuerdo').value = getHoyFormateado(); }
 
             const dtAbono = parseFechaStr(c.ultimoAbono);
             if (dtAbono) {
@@ -1037,7 +1207,7 @@
                 const mm = String(dtAbono.getMonth() + 1).padStart(2, '0');
                 const dd = String(dtAbono.getDate()).padStart(2, '0');
                 document.getElementById('inputFechaAbono').value = `${yyyy}-${mm}-${dd}`;
-            } else { document.getElementById('inputFechaAbono').value = ''; }
+            } else { document.getElementById('inputFechaAbono').value = getHoyFormateado(); }
 
             const dtCompra = parseFechaStr(c.ultimaCompra);
             if (dtCompra) {
@@ -1045,40 +1215,86 @@
                 const mm = String(dtCompra.getMonth() + 1).padStart(2, '0');
                 const dd = String(dtCompra.getDate()).padStart(2, '0');
                 document.getElementById('inputFechaCompra').value = `${yyyy}-${mm}-${dd}`;
-            } else { document.getElementById('inputFechaCompra').value = ''; }
+            } else { document.getElementById('inputFechaCompra').value = getHoyFormateado(); }
 
-            renderizarHistorialMovimientosCliente(c);
+            renderizarHistorialSeparadoCliente(c);
 
             document.getElementById('modalAbono').classList.remove('hidden');
         }
 
-        function renderizarHistorialMovimientosCliente(c) {
-            const divHistorial = document.getElementById('listaHistorialMovimientos');
-            divHistorial.innerHTML = '';
+        function cambiarTabHistorial(modo) {
+            const btnC = document.getElementById('btnTabHistCompras');
+            const btnA = document.getElementById('btnTabHistAbonos');
+            const secC = document.getElementById('secHistCompras');
+            const secA = document.getElementById('secHistAbonos');
 
-            if (!c.historialMovimientos || c.historialMovimientos.length === 0) {
-                divHistorial.innerHTML = `<span class="text-[10px] text-slate-500 italic block p-1">No hay movimientos recientes registrados</span>`;
-                return;
+            if (modo === 'COMPRAS') {
+                btnC.className = "w-1/2 py-1.5 border-b-2 border-amber-500 font-bold text-amber-400";
+                btnA.className = "w-1/2 py-1.5 border-b-2 border-transparent font-semibold text-slate-400 hover:text-white";
+                secC.classList.remove('hidden');
+                secA.classList.add('hidden');
+            } else {
+                btnA.className = "w-1/2 py-1.5 border-b-2 border-emerald-500 font-bold text-emerald-400";
+                btnC.className = "w-1/2 py-1.5 border-b-2 border-transparent font-semibold text-slate-400 hover:text-white";
+                secA.classList.remove('hidden');
+                secC.classList.add('hidden');
+            }
+        }
+
+        function renderizarHistorialSeparadoCliente(c) {
+            const divC = document.getElementById('secHistCompras');
+            const divA = document.getElementById('secHistAbonos');
+            divC.innerHTML = '';
+            divA.innerHTML = '';
+
+            const movs = c.historialMovimientos || [];
+            const compras = movs.filter(m => m.montoCompra > 0 || m.tipo === 'SOLO_COMPRA' || m.tipo === 'COMPRA_Y_ABONO');
+            const abonos = movs.filter(m => m.montoAbono > 0 || m.tipo === 'SOLO_ABONO' || m.tipo === 'ABONO_MANUAL');
+
+            document.getElementById('cntCompras').innerText = compras.length;
+            document.getElementById('cntAbonos').innerText = abonos.length;
+
+            if (compras.length === 0) {
+                divC.innerHTML = `<span class="text-[10px] text-slate-500 italic block p-1">Sin compras en historial</span>`;
+            } else {
+                compras.forEach(m => {
+                    const item = document.createElement('div');
+                    item.className = "flex items-center justify-between p-2 bg-slate-900 border border-slate-800 rounded-xl text-[11px]";
+                    item.innerHTML = `
+                        <div>
+                            <span class="font-bold text-amber-400 block">${m.detalle || "Compra/Factura"}</span>
+                            <span class="text-[10px] text-slate-400">Monto: ${fmt(m.montoCompra)} (${m.fecha})</span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            ${m.imagenFactura ? `<button onclick="verImagenFacturaModal('${m.imagenFactura}')" class="bg-amber-600/30 hover:bg-amber-600 text-amber-300 px-2 py-1 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-eye"></i></button>` : ''}
+                            <button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    `;
+                    divC.appendChild(item);
+                });
             }
 
-            c.historialMovimientos.forEach(mov => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = "flex items-center justify-between p-2 bg-slate-900 border border-slate-800 rounded-xl text-[11px]";
-                
-                let desc = mov.detalle || "Movimiento";
-                let montoStr = mov.montoAbono > 0 ? `Abonó: ${fmt(mov.montoAbono)}` : `Compra: ${fmt(mov.montoCompra)}`;
+            if (abonos.length === 0) {
+                divA.innerHTML = `<span class="text-[10px] text-slate-500 italic block p-1">Sin abonos en historial</span>`;
+            } else {
+                abonos.forEach(m => {
+                    const item = document.createElement('div');
+                    item.className = "flex items-center justify-between p-2 bg-slate-900 border border-slate-800 rounded-xl text-[11px]";
+                    item.innerHTML = `
+                        <div>
+                            <span class="font-bold text-emerald-400 block">${m.detalle || "Abono"}</span>
+                            <span class="text-[10px] text-slate-400">Monto: ${fmt(m.montoAbono)} (${m.fecha})</span>
+                        </div>
+                        <button onclick="eliminarMovimientoHistorial(${m.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-trash-can"></i></button>
+                    `;
+                    divA.appendChild(item);
+                });
+            }
+        }
 
-                itemDiv.innerHTML = `
-                    <div>
-                        <span class="font-bold text-white block">${desc}</span>
-                        <span class="text-[10px] text-indigo-400">${montoStr} (${mov.fecha})</span>
-                    </div>
-                    <button onclick="eliminarMovimientoHistorial(${mov.id})" class="bg-rose-600/80 hover:bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 active:scale-95">
-                        <i class="fa-solid fa-trash-can"></i> Revertir
-                    </button>
-                `;
-                divHistorial.appendChild(itemDiv);
-            });
+        function verImagenFacturaModal(imgBase64) {
+            document.getElementById('imgFacturaVisor').src = imgBase64;
+            document.getElementById('modalVisorImagen').classList.remove('hidden');
         }
 
         function eliminarMovimientoHistorial(movId) {
@@ -1088,7 +1304,7 @@
             const idx = c.historialMovimientos.findIndex(m => m.id === movId);
             if (idx === -1) return;
 
-            if (confirm("¿Seguro que deseas eliminar y revertir este movimiento del historial de este cliente?")) {
+            if (confirm("¿Seguro que deseas eliminar y revertir este movimiento del historial?")) {
                 const mov = c.historialMovimientos[idx];
                 c.saldo = mov.saldoAnterior;
                 c.abonado = mov.abonadoAnterior;
@@ -1098,9 +1314,10 @@
 
                 document.getElementById('inputSaldoActualEditar').value = c.saldo;
                 document.getElementById('inputTotalAbonadoEditar').value = c.abonado;
-                renderizarHistorialMovimientosCliente(c);
+                renderizarHistorialSeparadoCliente(c);
                 renderTabla();
                 actualizarMetricas();
+                renderizarTareasWidgetHoy();
             }
         }
 
@@ -1115,11 +1332,28 @@
             const nuevoAbonadoInput = parseFloat(document.getElementById('inputTotalAbonadoEditar').value);
             if (!isNaN(nuevoAbonadoInput) && nuevoAbonadoInput >= 0) { c.abonado = nuevoAbonadoInput; }
 
+            const chkSinResp = document.getElementById('chkSinRespuesta').checked;
+            c.sinRespuesta = chkSinResp;
+
+            if (chkSinResp) {
+                // Calcular fecha en 5 días desde hoy
+                const hoy5 = new Date();
+                hoy5.setDate(hoy5.getDate() + 5);
+                c.acuerdoFecha = formatFechaObj(hoy5);
+                c.acuerdoNota = "No respondió mensaje - Volver a escribir";
+            } else {
+                const inputFAcuerdo = document.getElementById('inputFechaAcuerdo').value;
+                if (inputFAcuerdo) {
+                    const partes = inputFAcuerdo.split('-');
+                    if (partes.length === 3) { c.acuerdoFecha = `${partes[2]}/${partes[1]}/${partes[0]}`; }
+                } else { c.acuerdoFecha = ""; }
+                c.acuerdoNota = document.getElementById('inputNotaAcuerdo').value;
+            }
+
             const monto = parseFloat(document.getElementById('inputMontoAbono').value);
             if (!c.historialMovimientos) c.historialMovimientos = [];
 
-            const hoy = new Date();
-            const fechaHoy = formatFechaObj(hoy);
+            const fechaHoy = formatFechaObj(new Date());
 
             if (monto && monto > 0) {
                 const saldoAnt = c.saldo;
@@ -1143,13 +1377,6 @@
                 });
             }
 
-            const inputFAcuerdo = document.getElementById('inputFechaAcuerdo').value;
-            if (inputFAcuerdo) {
-                const partes = inputFAcuerdo.split('-');
-                if (partes.length === 3) { c.acuerdoFecha = `${partes[2]}/${partes[1]}/${partes[0]}`; }
-            } else { c.acuerdoFecha = ""; }
-            c.acuerdoNota = document.getElementById('inputNotaAcuerdo').value;
-
             const inputFA = document.getElementById('inputFechaAbono').value;
             if (inputFA) {
                 const partes = inputFA.split('-');
@@ -1167,6 +1394,7 @@
             cerrarModal();
             renderTabla();
             actualizarMetricas();
+            renderizarTareasWidgetHoy();
         }
 
         function exportarExcelOficial() {
@@ -1188,7 +1416,7 @@
 
                 const valCliente = c.cliente;
                 const valCobrar = fmtMonedaExcel(c.saldo);
-                const valMensaje = hasAbono ? "OK" : "Escribio";
+                const valMensaje = hasAbono ? "OK" : (c.sinRespuesta ? "Sin Respuesta" : "Escribio");
                 const valReconocimiento = "SI";
                 const valAcuerdoPago = c.acuerdoFecha ? `SI (${c.acuerdoFecha})` : "SI/PEN";
                 const valCausaNoPago = hasAbono ? "N/A" : "DEFINIR";
@@ -1196,7 +1424,9 @@
                 
                 const info = obtenerInfoCobro(c);
                 let valFechaAcuerdo = "Cobrar Nuevamente";
-                if (c.acuerdoFecha) {
+                if (c.sinRespuesta) {
+                    valFechaAcuerdo = `Reescribir en 5 días (${c.acuerdoFecha})`;
+                } else if (c.acuerdoFecha) {
                     valFechaAcuerdo = `Acuerdo: ${c.acuerdoFecha}`;
                 } else if (info.fechaReferencia && info.difDias <= 15) {
                     valFechaAcuerdo = `Cobrar en 8 días (${info.strProxima})`;
