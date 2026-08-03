@@ -73,6 +73,7 @@
                     <input type="file" id="inputExcelFile" accept=".xlsx, .xls, .csv" class="hidden" onchange="prepararPrevisualizacionExcel(event)">
                 </label>
 
+                <!-- PESTAÑA BITÁCORA / REGISTRO DE MOVIMIENTOS ADMIN -->
                 <button onclick="abrirModalBitacoraAdmin()" class="sec-admin hidden bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-purple-900/30 active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-clock-rotate-left text-sm"></i>
                     <span>📜 Registro y Planillas</span>
@@ -123,7 +124,7 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider">Total Clientes</span>
                     <i class="fa-solid fa-users text-xs"></i>
                 </div>
-                <h3 id="statTotalClientes" class="text-2xl font-extrabold text-white">252</h3>
+                <h3 id="statTotalClientes" class="text-2xl font-extrabold text-white">255</h3>
                 <p class="text-[10px] text-slate-500 font-medium">Base activa total</p>
             </div>
 
@@ -132,7 +133,7 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider">Por Cobrar</span>
                     <i class="fa-solid fa-hand-holding-dollar text-xs"></i>
                 </div>
-                <h3 id="statSaldoTotal" class="text-2xl font-extrabold text-amber-400">$145.845.538</h3>
+                <h3 id="statSaldoTotal" class="text-2xl font-extrabold text-amber-400">$140.470.498</h3>
                 <p class="text-[10px] text-amber-500/70 font-medium">Saldo pendiente global oficial</p>
             </div>
 
@@ -141,7 +142,7 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider">Total Recaudado</span>
                     <i class="fa-solid fa-circle-check text-xs"></i>
                 </div>
-                <h3 id="statTotalAbonos" class="text-2xl font-extrabold text-emerald-400">$0</h3>
+                <h3 id="statTotalAbonos" class="text-2xl font-extrabold text-emerald-400">$90.743.625</h3>
                 <p class="text-[10px] text-emerald-500/70 font-medium">Recaudo acumulado</p>
             </div>
 
@@ -150,7 +151,7 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider">Próximos Cobros</span>
                     <i class="fa-solid fa-clock text-xs"></i>
                 </div>
-                <h3 id="statProximos" class="text-2xl font-extrabold text-sky-400">0</h3>
+                <h3 id="statProximos" class="text-2xl font-extrabold text-sky-400">47</h3>
                 <p class="text-[10px] text-sky-500/70 font-medium">Cobros en agenda activa</p>
             </div>
 
@@ -159,7 +160,7 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider">+30 Días Inactivos</span>
                     <i class="fa-solid fa-triangle-exclamation text-xs"></i>
                 </div>
-                <h3 id="statInactivos" class="text-2xl font-extrabold text-rose-400">0</h3>
+                <h3 id="statInactivos" class="text-2xl font-extrabold text-rose-400">164</h3>
                 <p class="text-[10px] text-rose-500/70 font-medium">Requieren gestión urgente</p>
             </div>
         </div>
@@ -612,7 +613,7 @@
             </div>
         </div>
     </div>
-<!-- Script de Configuración de Firebase y Lógica -->
+    <!-- Script de Configuración de Firebase y Lógica -->
     <script>
         // CONFIGURACIÓN OFICIAL DE TU PROYECTO FIREBASE
         const firebaseConfig = {
@@ -740,7 +741,7 @@
         function cargarDatos() {
             aplicarPermisosVisuales();
 
-            const guardado = localStorage.getItem('cartera_db_v23');
+            const guardado = localStorage.getItem('cartera_db_v24');
             if (guardado) {
                 const parseado = JSON.parse(guardado);
                 clientes = parseado.clientes || parseado;
@@ -759,7 +760,7 @@
                     if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
                         historialPlanillasCargadas = doc.data().historialPlanillas || [];
-                        localStorage.setItem('cartera_db_v23', JSON.stringify({ clientes, planillas: historialPlanillasCargadas }));
+                        localStorage.setItem('cartera_db_v24', JSON.stringify({ clientes, planillas: historialPlanillasCargadas }));
                         renderTabla();
                         actualizarMetricas();
                         renderizarTareasWidgetHoy();
@@ -773,7 +774,7 @@
         }
 
         function guardarEnNube() {
-            localStorage.setItem('cartera_db_v23', JSON.stringify({ clientes, planillas: historialPlanillasCargadas }));
+            localStorage.setItem('cartera_db_v24', JSON.stringify({ clientes, planillas: historialPlanillasCargadas }));
             if (db) {
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
@@ -788,8 +789,8 @@
             if (confirm("⚠️ ¿Deseas restablecer la base de datos oficial completa ($145.845.538) y limpiar la Nube?")) {
                 clientes = JSON.parse(JSON.stringify(baseInicial));
                 historialPlanillasCargadas = [];
-                for(let i=11; i<=23; i++) { localStorage.removeItem('cartera_db_v'+i); }
-                localStorage.setItem('cartera_db_v23', JSON.stringify({ clientes, planillas: [] }));
+                for(let i=11; i<=24; i++) { localStorage.removeItem('cartera_db_v'+i); }
+                localStorage.setItem('cartera_db_v24', JSON.stringify({ clientes, planillas: [] }));
 
                 if (db) {
                     db.collection("cartera").doc("general").set({
@@ -904,7 +905,6 @@
             });
         }
 
-        // DESCARGA DIRECTA DE LA PLANILLA ORIGINAL ALMACENADA
         function renderizarTablaPlanillasGlobal() {
             const tbody = document.getElementById('tbodyPlanillasGlobal');
             tbody.innerHTML = '';
@@ -1010,23 +1010,33 @@
             return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Cobrar en 8 días (${info.strProxima})</span>`;
         }
 
+        // LÓGICA CORREGIDA DEL WIDGET SUPERIOR DE TAREAS HOY
         function renderizarTareasWidgetHoy() {
-            const hoy = new Date();
-            document.getElementById('txtFechaHoyWidget').innerText = `Hoy: ${formatFechaObj(hoy)}`;
+            const hoyStr = formatFechaObj(new Date());
+            document.getElementById('txtFechaHoyWidget').innerText = `Hoy: ${hoyStr}`;
 
             const contenedor = document.getElementById('contenedorTareasHoy');
             contenedor.innerHTML = '';
 
             const clientesTareas = clientes.filter(c => {
                 if (c.saldo <= 0) return false;
+
+                // REGLA CRÍTICA 1: Si el cliente YA abonó el día de hoy, SE EXCLUYE (tarea cumplida)
+                if (c.ultimoAbono === hoyStr) return false;
+
                 const info = obtenerInfoCobro(c);
+
+                // REGLA CRÍTICA 2: Si el próximo cobro está programado a futuro (más de 1 día), SE EXCLUYE
+                if (info.diasParaProximo > 1 && !c.sinRespuesta && !c.acuerdoFecha) return false;
+
                 const tieneAcuerdoHoy = c.acuerdoFecha !== "";
-                const esCobroHoy = info.diasParaProximo <= 1 || info.difDias <= 15;
-                return tieneAcuerdoHoy || esCobroHoy || c.sinRespuesta;
+                const esCobroHoyOManana = info.diasParaProximo <= 1 || info.difDias > 15;
+
+                return tieneAcuerdoHoy || esCobroHoyOManana || c.sinRespuesta;
             });
 
             if (clientesTareas.length === 0) {
-                contenedor.innerHTML = `<span class="text-xs text-slate-500 italic col-span-full">🎉 No hay cobros ni compromisos pendientes programados para hoy</span>`;
+                contenedor.innerHTML = `<span class="text-xs text-slate-500 italic col-span-full">🎉 No hay cobros pendientes programados para hoy</span>`;
                 document.getElementById('txtPorcentajeTareas').innerText = "100%";
                 document.getElementById('barProgresoTareas').style.width = "100%";
                 return;
@@ -1280,7 +1290,6 @@
             alert(`✅ Recibo procesado correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
         }
 
-        // IMPORTACIÓN PLANILLA GUARDANDO BASE64 DEL ARCHIVO ORIGINAL
         function prepararPrevisualizacionExcel(event) {
             if (!esModoAdmin) { alert("Ingresa con tu clave de Administrador para importar planillas."); return; }
             const file = event.target.files[0];
@@ -1293,7 +1302,6 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
 
-                // Convertir libro a base64 para poder descargarlo luego desde la bitácora
                 try {
                     base64ArchivoExcelActual = XLSX.write(workbook, { bookType: 'xlsx', type: 'base64' });
                 } catch(err) {
