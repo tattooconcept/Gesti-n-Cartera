@@ -61,7 +61,7 @@
                     <span id="lblBtnAuth">Acceso Administrador</span>
                 </button>
 
-                <!-- Botones de Admin (Ocultos por defecto en Modo Lectura) -->
+                <!-- Botones de Admin -->
                 <button onclick="abrirModalFacturas()" class="sec-admin hidden bg-amber-600 hover:bg-amber-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-amber-900/30 active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-file-invoice-dollar text-sm"></i>
                     <span>Cargar Factura / Foto</span>
@@ -73,13 +73,11 @@
                     <input type="file" id="inputExcelFile" accept=".xlsx, .xls, .csv" class="hidden" onchange="prepararPrevisualizacionExcel(event)">
                 </label>
 
-                <!-- PESTAÑA BITÁCORA / REGISTRO DE MOVIMIENTOS ADMIN -->
                 <button onclick="abrirModalBitacoraAdmin()" class="sec-admin hidden bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-purple-900/30 active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-clock-rotate-left text-sm"></i>
-                    <span>📜 Registro de Movimientos</span>
+                    <span>📜 Registro y Planillas</span>
                 </button>
 
-                <!-- BOTÓN RESTABLECER NUBE -->
                 <button onclick="forzarRestablecerNubeOficial()" class="sec-admin hidden bg-rose-700 hover:bg-rose-600 text-white px-3 py-2.5 rounded-2xl font-semibold transition flex items-center justify-center gap-1.5 text-xs shadow-lg shadow-rose-900/30 active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-rotate-left text-sm"></i>
                     <span>Reset Base Oficial</span>
@@ -210,7 +208,7 @@
 
     </div>
 
-    <!-- MODAL BITÁCORA GLOBAL DE MOVIMIENTOS ADMIN -->
+    <!-- MODAL BITÁCORA GLOBAL Y PLANILLAS PROCESADAS ADMIN -->
     <div id="modalBitacoraAdmin" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
         <div class="glass-card bg-slate-900 border border-slate-700/80 p-6 rounded-3xl max-w-5xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -219,8 +217,8 @@
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white">Auditoría & Bitácora de Movimientos (Admin)</h3>
-                        <p class="text-xs text-slate-400">Historial en tiempo real de todas las operaciones aplicadas</p>
+                        <h3 class="text-base font-bold text-white">Auditoría, Bitácora & Historial de Planillas</h3>
+                        <p class="text-xs text-slate-400">Control de operaciones e historial de archivos Excel cargados</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalBitacoraAdmin()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs">
@@ -228,32 +226,59 @@
                 </button>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
-                <input type="text" id="inputBuscarBitacora" oninput="renderizarTablaBitacoraGlobal()" placeholder="Buscar por cliente o detalle..." class="w-full sm:w-72 bg-slate-950 text-white text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-purple-500">
-                <span id="txtTotalMovimientosBitacora" class="text-xs font-semibold text-purple-300"></span>
+            <div class="flex border-b border-slate-800 text-xs">
+                <button id="btnTabBitacoraMovs" onclick="cambiarTabBitacora('MOVS')" class="w-1/2 py-2 border-b-2 border-purple-500 font-bold text-purple-400">📜 Movimientos de Auditoría</button>
+                <button id="btnTabBitacoraPlanillas" onclick="cambiarTabBitacora('PLANILLAS')" class="w-1/2 py-2 border-b-2 border-transparent font-semibold text-slate-400 hover:text-white">📊 Historial de Planillas Cargadas</button>
             </div>
 
-            <div class="overflow-x-auto custom-scrollbar flex-1 border border-slate-800 rounded-2xl">
-                <table class="w-full text-left text-xs text-slate-300 border-collapse">
-                    <thead class="bg-slate-950 text-[10px] uppercase text-slate-400 sticky top-0 border-b border-slate-800 z-10">
-                        <tr>
-                            <th class="p-3">Fecha</th>
-                            <th class="p-3">Cliente</th>
-                            <th class="p-3">Operación / Detalle</th>
-                            <th class="p-3 text-right">Saldo Ant.</th>
-                            <th class="p-3 text-right text-emerald-400">Compra / Abono</th>
-                            <th class="p-3 text-right font-bold text-amber-400">Nuevo Saldo</th>
-                            <th class="p-3 text-center">Soporte</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyBitacoraGlobal" class="divide-y divide-slate-800/40 font-medium">
-                    </tbody>
-                </table>
+            <!-- SECCIÓN 1: MOVIMIENTOS INDIVIDUALES -->
+            <div id="secBitacoraMovs" class="flex-1 flex flex-col space-y-3 overflow-hidden">
+                <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                    <input type="text" id="inputBuscarBitacora" oninput="renderizarTablaBitacoraGlobal()" placeholder="Buscar por cliente o detalle..." class="w-full sm:w-72 bg-slate-950 text-white text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-purple-500">
+                    <span id="txtTotalMovimientosBitacora" class="text-xs font-semibold text-purple-300"></span>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar flex-1 border border-slate-800 rounded-2xl">
+                    <table class="w-full text-left text-xs text-slate-300 border-collapse">
+                        <thead class="bg-slate-950 text-[10px] uppercase text-slate-400 sticky top-0 border-b border-slate-800 z-10">
+                            <tr>
+                                <th class="p-3">Fecha</th>
+                                <th class="p-3">Cliente</th>
+                                <th class="p-3">Operación / Detalle</th>
+                                <th class="p-3 text-right">Saldo Ant.</th>
+                                <th class="p-3 text-right text-emerald-400">Compra / Abono</th>
+                                <th class="p-3 text-right font-bold text-amber-400">Nuevo Saldo</th>
+                                <th class="p-3 text-center">Soporte</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyBitacoraGlobal" class="divide-y divide-slate-800/40 font-medium">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: HISTORIAL PLANILLAS EXCEL CARGADAS -->
+            <div id="secBitacoraPlanillas" class="hidden flex-1 flex flex-col space-y-3 overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar flex-1 border border-slate-800 rounded-2xl">
+                    <table class="w-full text-left text-xs text-slate-300 border-collapse">
+                        <thead class="bg-slate-950 text-[10px] uppercase text-slate-400 sticky top-0 border-b border-slate-800 z-10">
+                            <tr>
+                                <th class="p-3">Fecha de Carga</th>
+                                <th class="p-3">Nombre del Archivo</th>
+                                <th class="p-3 text-center">Filas Procesadas</th>
+                                <th class="p-3 text-center">Clientes Creados</th>
+                                <th class="p-3 text-right">Monto Total Movilizado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPlanillasGlobal" class="divide-y divide-slate-800/40 font-medium">
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="flex justify-end">
                 <button onclick="cerrarModalBitacoraAdmin()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition">
-                    Cerrar Bitácora
+                    Cerrar Módulo
                 </button>
             </div>
         </div>
@@ -394,7 +419,7 @@
 
     <!-- Modal Previsualización Planilla General -->
     <div id="modalConfirmarImportacion" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-        <div class="glass-card bg-slate-900 border border-slate-700/80 p-6 rounded-3xl max-w-4xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+        <div class="glass-card bg-slate-900 border border-slate-700/80 p-6 rounded-3xl max-w-5xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-lg">
@@ -402,7 +427,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-white">Previsualización de Importación Planilla</h3>
-                        <p class="text-xs text-slate-400">El sistema actualizará el Saldo Oficial directamente desde esta planilla</p>
+                        <p class="text-xs text-slate-400" id="txtDetalleDetectadosExcel">Revisa y confirma los movimientos detectados en el archivo</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalConfirmacion()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition text-xs">
@@ -412,14 +437,16 @@
 
             <div class="overflow-x-auto custom-scrollbar flex-1 border border-slate-800 rounded-2xl">
                 <table class="w-full text-left text-xs text-slate-300 border-collapse">
-                    <thead class="bg-slate-950 text-[10px] uppercase text-slate-400 sticky top-0 border-b border-slate-800">
+                    <thead class="bg-slate-950 text-[10px] uppercase text-slate-400 sticky top-0 border-b border-slate-800 z-10">
                         <tr>
+                            <th class="p-3">Fila</th>
                             <th class="p-3">Cliente Detectado</th>
-                            <th class="p-3">Cliente Coincidente</th>
-                            <th class="p-3 text-right">Saldo en App</th>
-                            <th class="p-3 text-right">Compra</th>
-                            <th class="p-3 text-right">Abono</th>
-                            <th class="p-3 text-right font-bold text-amber-400">Saldo Oficial Planilla</th>
+                            <th class="p-3">Coincidencia en Base</th>
+                            <th class="p-3 text-right">Saldo App</th>
+                            <th class="p-3 text-right text-amber-400">Compra</th>
+                            <th class="p-3 text-right text-emerald-400">Abono</th>
+                            <th class="p-3 text-right font-bold text-amber-300">Saldo Planilla</th>
+                            <th class="p-3 text-center">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyPreviewImport" class="divide-y divide-slate-800/40 font-medium">
@@ -434,7 +461,7 @@
                         Cancelar
                     </button>
                     <button onclick="aplicarImportacionConfirmada()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg shadow-emerald-900/40 active:scale-95">
-                        <i class="fa-solid fa-check mr-1"></i> Sincronizar y Aplicar Saldo Oficial
+                        <i class="fa-solid fa-check mr-1"></i> Confirmar y Crear Clientes Nuevos
                     </button>
                 </div>
             </div>
@@ -443,14 +470,14 @@
 
     <!-- Modal Resumen Final Importación -->
     <div id="modalResultadoImportacion" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-        <div class="glass-card bg-slate-900 border border-slate-700/80 p-6 rounded-3xl max-w-2xl w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+        <div class="glass-card bg-slate-900 border border-slate-700/80 p-6 rounded-3xl max-w-3xl w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
             <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
                 <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
                     <i class="fa-solid fa-file-circle-check"></i>
                 </div>
                 <div>
                     <h3 class="text-base font-bold text-white">Sincronización de Planilla Aplicada</h3>
-                    <p class="text-xs text-slate-400">Se han actualizado los Saldos Oficiales y Fechas en la Nube</p>
+                    <p class="text-xs text-slate-400">Todos los movimientos y clientes nuevos han sido registrados</p>
                 </div>
             </div>
 
@@ -611,6 +638,8 @@
         let clientes = [];
         let clienteSeleccionadoId = null;
         let listaCambiosPendientesImportacion = [];
+        let historialPlanillasCargadas = [];
+        let nombreArchivoExcelActual = "";
         let imagenBase64TemporalOCR = null;
 
         const baseInicial = [{"id": 1, "cliente": "CESAR ARCANGEL ALAMOS", "saldo": 3133000, "abonado": 1000000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": "Recientemente Pago"}, {"id": 2, "cliente": "ALEJANDRA ARIAS TANAKA", "saldo": 3466000, "abonado": 50000, "ultimoAbono": "14/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 3, "cliente": "JOEL", "saldo": 1275000, "abonado": 1900000, "ultimoAbono": "25/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 4, "cliente": "STEVEN CONTRERAS LOBO", "saldo": 1256000, "abonado": 1800000, "ultimoAbono": "24/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 5, "cliente": "CESAR MARTINK", "saldo": 2589000, "abonado": 270000, "ultimoAbono": "04/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 6, "cliente": "TRECE CHIROS", "saldo": 2607600, "abonado": 500000, "ultimoAbono": "02/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 7, "cliente": "EDWIN GAITAN", "saldo": 1691000, "abonado": 1550000, "ultimoAbono": "23/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 8, "cliente": "STICK ROSAS FUNZA", "saldo": 2420000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 9, "cliente": "MARIA I ALEJANDRA ABYB SH", "saldo": 2413000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 10, "cliente": "GEORGE ROSAS TUNJA", "saldo": 0, "abonado": 6858400, "ultimoAbono": "18/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 11, "cliente": "TATIANA CABRA META INCK", "saldo": 1516000, "abonado": 1000000, "ultimoAbono": "06/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 12, "cliente": "NERMA A", "saldo": 1782400, "abonado": 400000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 13, "cliente": "MAURICIO CRUZ 2.0", "saldo": 1729000, "abonado": 800000, "ultimoAbono": "03/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 14, "cliente": "JOHAN SEBASTIAN RODRIGUEZ", "saldo": 1320000, "abonado": 900000, "ultimoAbono": "06/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 15, "cliente": "SEBASTIAN COMPRATIR", "saldo": 1715000, "abonado": 200000, "ultimoAbono": "06/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 16, "cliente": "MIGUEL ADICTION LISBOA", "saldo": 1852000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": "ACUERDOS CADA 15 DIAS"}, {"id": 17, "cliente": "FONTECHA", "saldo": 966000, "abonado": 800000, "ultimoAbono": "12/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 18, "cliente": "FELIPE NO KING BARRIO ETERNO", "saldo": 1477000, "abonado": 300000, "ultimoAbono": "08/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": "SE ESCRIBIO INSTAGRAM PORQUE NO VIVE EN COLOMBIA"}, {"id": 19, "cliente": "OSCAR GARAY", "saldo": 1770000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 20, "cliente": "FELIPE JUYO", "saldo": 1754000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 21, "cliente": "LUIS ROSA INCK", "saldo": 1479000, "abonado": 685000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 22, "cliente": "GIOVANNI INK DARK", "saldo": 1102000, "abonado": 600000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 23, "cliente": "JEANPI LUX 85", "saldo": 1660000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 24, "cliente": "JHOAN ALTA GAMA", "saldo": 1631000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 25, "cliente": "JUAN DIEGO CAÑON", "saldo": 1543000, "abonado": 1200000, "ultimoAbono": "16/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 26, "cliente": "MICHELLE LOPEZ OFC 512", "saldo": 1532000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 27, "cliente": "SHARON SARMIENTO", "saldo": 1527000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 28, "cliente": "ANDRES OVALLE MALASANGRE", "saldo": 1000000, "abonado": 500000, "ultimoAbono": "14/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 29, "cliente": "DANILO KENNEDY", "saldo": 989500, "abonado": 500000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 30, "cliente": "JOSE LEONARDO RINCON", "saldo": 1487000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 31, "cliente": "JHON ROSERO", "saldo": 1594000, "abonado": 662000, "ultimoAbono": "22/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 32, "cliente": "KEVIN TATTOO DC", "saldo": 1223000, "abonado": 200000, "ultimoAbono": "16/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 33, "cliente": "VALENTINA OCHOA OSCAR GARAY", "saldo": 1372000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 34, "cliente": "YISAG ERAZO", "saldo": 860400, "abonado": 500000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 35, "cliente": "JHONY INK DARK MADRID", "saldo": 1162000, "abonado": 1000000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 36, "cliente": "MINA MERCURY", "saldo": 1281000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 37, "cliente": "Vanessa Nocturna Cronex", "saldo": 1259000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 38, "cliente": "BRAYAN SNEIDER ROJAS FACA", "saldo": 684000, "abonado": 1200000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 39, "cliente": "MARIO TOLOZA", "saldo": 1240000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 40, "cliente": "HOLMAR BOGOTA", "saldo": 1235000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 41, "cliente": "FELIPE CARRERO", "saldo": 1232000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 42, "cliente": "STEVEN ROMERO", "saldo": 1022000, "abonado": 200000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 43, "cliente": "MIGUEL BOTERO", "saldo": 996000, "abonado": 515000, "ultimoAbono": "02/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 44, "cliente": "JHONATAN QUINTERO BLACK JUYO", "saldo": 1226000, "abonado": 820000, "ultimoAbono": "25/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 45, "cliente": "SERGIO DANILO GONZALEZ", "saldo": 715000, "abonado": 400000, "ultimoAbono": "06/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 46, "cliente": "SILENC", "saldo": 1111000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 47, "cliente": "RICHARD BERNAL", "saldo": 265000, "abonado": 839000, "ultimoAbono": "16/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 48, "cliente": "ZEUS ART THE RUE", "saldo": 1100000, "abonado": 400000, "ultimoAbono": "03/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 49, "cliente": "GIOVANNY SANTA TINTA", "saldo": 1000000, "abonado": 521000, "ultimoAbono": "23/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 50, "cliente": "NICOLAS RODRIGUEZ OFC 512", "saldo": 1070002, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 51, "cliente": "BUHO TATTOO", "saldo": 539000, "abonado": 600000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 52, "cliente": "GUILLERMO META INCK", "saldo": 520000, "abonado": 500000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 53, "cliente": "ARCANGEL L", "saldo": 1132700, "abonado": 800000, "ultimoAbono": "15/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 54, "cliente": "DIEGO HC", "saldo": 807000, "abonado": 200000, "ultimoAbono": "14/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 55, "cliente": "SEBASTIAN CAMILO OSORIO", "saldo": 1005000, "abonado": 700000, "ultimoAbono": "01/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 56, "cliente": "FREDY ALEXANDER TOXIC", "saldo": 897000, "abonado": 100000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 57, "cliente": "Alexander Casas Inmortal Galery", "saldo": 690000, "abonado": 300000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 58, "cliente": "ALEX FUNZA", "saldo": 916000, "abonado": 100000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 59, "cliente": "ANDREA PINZON MALDONADO ANDY", "saldo": 959000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 60, "cliente": "KAROLINA INMORTAL", "saldo": 949000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 61, "cliente": "SEBASTIAN FLOREZ FLOREZ", "saldo": 742000, "abonado": 200000, "ultimoAbono": "03/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 62, "cliente": "JUAN DAVID SOTO CARLOX", "saldo": 936000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 63, "cliente": "CRISTIAN SACRED FAMILY", "saldo": 783000, "abonado": 150000, "ultimoAbono": "23/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 64, "cliente": "ROBLES ROBLES", "saldo": 866000, "abonado": 700000, "ultimoAbono": "17/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 65, "cliente": "ANDRES NAVAS", "saldo": 902000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 66, "cliente": "JULIAN BENDITO TATTOO FACA", "saldo": 470000, "abonado": 400000, "ultimoAbono": "30/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 67, "cliente": "OCTOPUS TATTOO SUPLY", "saldo": 848000, "abonado": 1245000, "ultimoAbono": "10/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 68, "cliente": "DAVID INMORTAL", "saldo": 539000, "abonado": 5300000, "ultimoAbono": "14/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 69, "cliente": "WENDY ROMERO THE GOLD", "saldo": 824000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 70, "cliente": "SERGIO ANDRES PEREZ ZAPATA", "saldo": 822000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 71, "cliente": "may-85", "saldo": 822000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 72, "cliente": "MONICA THE GOLD", "saldo": 517000, "abonado": 300000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 73, "cliente": "JUAN ORTEGA DRAKO", "saldo": 810000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 74, "cliente": "MICHELLE LOPEZ", "saldo": 805000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 75, "cliente": "PABLO MARIN MORBIDA", "saldo": 604400, "abonado": 200000, "ultimoAbono": "22/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 76, "cliente": "ARVEY MORBIDA", "saldo": 901000, "abonado": 300000, "ultimoAbono": "01/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 77, "cliente": "DIEGO RIVERA - GAITANA", "saldo": 1240000, "abonado": 1373000, "ultimoAbono": "16/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 78, "cliente": "ALEJANDRO BERNAL", "saldo": 567000, "abonado": 200000, "ultimoAbono": "25/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 79, "cliente": "SEBASTIAN MARTIN ONCE ONCE", "saldo": 757000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 80, "cliente": "DANIEL DIAZ", "saldo": 750000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 81, "cliente": "ANDRES CANO VILLAS", "saldo": 164000, "abonado": 1469000, "ultimoAbono": "16/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 82, "cliente": "CRISTIAN BESTIAL", "saldo": 734000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 83, "cliente": "DAVID FLOREZ FUNZA", "saldo": 483000, "abonado": 250000, "ultimoAbono": "06/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 84, "cliente": "DIEGO VALLE FUNZA", "saldo": 478000, "abonado": 500000, "ultimoAbono": "25/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 85, "cliente": "ROSE BELKY BELKY", "saldo": 730000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 86, "cliente": "EDWIN QUIRIGUA", "saldo": 727000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 87, "cliente": "LIZZ OLD HOUSE", "saldo": 519000, "abonado": 400000, "ultimoAbono": "06/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 88, "cliente": "OSCAR MORBIDA", "saldo": 695000, "abonado": 400000, "ultimoAbono": "21/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 89, "cliente": "CAMILO OSORIO", "saldo": 692000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 90, "cliente": "JESSICA SILVA GARZON", "saldo": 390000, "abonado": 300000, "ultimoAbono": "21/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 91, "cliente": "FERNANDA FACA", "saldo": 890000, "abonado": 400000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 92, "cliente": "CRISTIAN MIRA GOLD", "saldo": 662000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 93, "cliente": "DIEGO ARMANDO ROSADO PEREZ - ARCANGEL", "saldo": 455000, "abonado": 200000, "ultimoAbono": "23/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 94, "cliente": "MARIA JULIANA INMORTAL", "saldo": 650000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 95, "cliente": "CARLOTA GARCIA", "saldo": 550000, "abonado": 1248000, "ultimoAbono": "06/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 96, "cliente": "OMAR ENIGMA", "saldo": 638000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 97, "cliente": "JUAN DAVID HURTADO", "saldo": 434000, "abonado": 200000, "ultimoAbono": "03/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 98, "cliente": "DANI MARTINICO ART RUE", "saldo": 334000, "abonado": 300000, "ultimoAbono": "30/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 99, "cliente": "LORENA THE GOLD", "saldo": 632000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 100, "cliente": "JOHAN ALDANA ALTA GAMMA", "saldo": 630000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 101, "cliente": "CRONEX", "saldo": 614000, "abonado": 890000, "ultimoAbono": "15/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 102, "cliente": "INGRID LATINK DE LUISK", "saldo": 625000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 103, "cliente": "LUQUE CARLOS", "saldo": 616800, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 104, "cliente": "ANDRES DOCTOR TATTOO", "saldo": 200000, "abonado": 1064400, "ultimoAbono": "24/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 105, "cliente": "ARTIAN ALTA GAMMA", "saldo": 492000, "abonado": 600000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 106, "cliente": "JULIAN MADRID", "saldo": 657000, "abonado": 422000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 107, "cliente": "KAREN BAUTISTA", "saldo": 757000, "abonado": 250000, "ultimoAbono": "11/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 108, "cliente": "FREDY GALINDO LA EMERGENTE", "saldo": 386000, "abonado": 200000, "ultimoAbono": "11/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 109, "cliente": "RASTA", "saldo": 582000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 110, "cliente": "CESAR DOMICILIOS", "saldo": 580000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 111, "cliente": "MIKE MOLINOS", "saldo": 478000, "abonado": 100000, "ultimoAbono": "22/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 112, "cliente": "MARBIN SUBA", "saldo": 548000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 113, "cliente": "PROJECT TATTO MINA MERCURY", "saldo": 890000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "18/06/2026", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 114, "cliente": "MAGKLIN MAKA", "saldo": 537400, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 115, "cliente": "CAROLINE INMORTAL", "saldo": 451000, "abonado": 340000, "ultimoAbono": "17/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 116, "cliente": "MALECHO", "saldo": 531000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 117, "cliente": "DANIEL HURTADO ALBARRACIN - LATINK", "saldo": 470000, "abonado": 50000, "ultimoAbono": "03/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 118, "cliente": "NICOLAS MALAGON CASAS", "saldo": 515000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 119, "cliente": "KAORY", "saldo": 524000, "abonado": 50000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 120, "cliente": "LILIANA EMERGENTE", "saldo": 907000, "abonado": 330000, "ultimoAbono": "06/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 121, "cliente": "JULIAN SHOCK", "saldo": 0, "abonado": 499000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 122, "cliente": "DYLAN FERNANDO FERREIRA NERMA", "saldo": 276000, "abonado": 300000, "ultimoAbono": "25/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 123, "cliente": "MANDY MANDY", "saldo": 187400, "abonado": 300000, "ultimoAbono": "27/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 124, "cliente": "LIZETH ALTA GAMA", "saldo": 483000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 125, "cliente": "MARLON YECID FLOREZ ART", "saldo": 470000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 126, "cliente": "ALEX BRIGHT TATTO", "saldo": 465000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 127, "cliente": "ARDILA CESAR", "saldo": 460000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 128, "cliente": "LUIS CARLOS OSORIO LUISK", "saldo": 460000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 129, "cliente": "CESAR CAMILO MORBIDA", "saldo": 574000, "abonado": 112000, "ultimoAbono": "04/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 130, "cliente": "MORBIDA", "saldo": 352000, "abonado": 100000, "ultimoAbono": "02/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 131, "cliente": "LUIS ART RUE", "saldo": 471000, "abonado": 400000, "ultimoAbono": "03/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 132, "cliente": "JHAN PIER ROZO", "saldo": 406000, "abonado": 460000, "ultimoAbono": "22/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 133, "cliente": "ANDRES DARK", "saldo": 442000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 134, "cliente": "NICO VERA", "saldo": 435000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 135, "cliente": "JULIAN SABOGAL", "saldo": 232000, "abonado": 200000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 136, "cliente": "DEIBY JOHAN GIL HOLMAR", "saldo": 424000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 137, "cliente": "STEVEN FORERO MALA SANGRE", "saldo": 207000, "abonado": 300000, "ultimoAbono": "10/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 138, "cliente": "MILENA CALDERON", "saldo": 785000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "10/06/2026", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 139, "cliente": "MIKE TARQUINI BRIGHT", "saldo": 412000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 140, "cliente": "WILSON TORRES KENNEDY", "saldo": 300000, "abonado": 100000, "ultimoAbono": "30/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 141, "cliente": "CRISTIAN OFC 512", "saldo": 387000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 142, "cliente": "STHEPANY BARRIOS UNIDOS", "saldo": 156000, "abonado": 765000, "ultimoAbono": "22/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 143, "cliente": "MARLON FACA", "saldo": 386000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 144, "cliente": "SANTIAGO GONZALEZ BUITRAGO", "saldo": 380000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 145, "cliente": "GABRIEL FLOREZ GABO PASTO", "saldo": 380000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 146, "cliente": "CRAYOLA", "saldo": 366000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 147, "cliente": "JOSE ARGENIS TROMPIS", "saldo": 361000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 148, "cliente": "CAMILO - PRIDE", "saldo": 355000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 149, "cliente": "WALTER ALEJANDRO VERGARA CHICA", "saldo": 354000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 150, "cliente": "DANIELS KENEDY", "saldo": 352000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 151, "cliente": "BRAYAN SHOCK FACA", "saldo": 51000, "abonado": 300000, "ultimoAbono": "14/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 152, "cliente": "LAURA VANESSA DIAZ", "saldo": 350000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 153, "cliente": "FELIPE LOBO", "saldo": 346000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 154, "cliente": "JEY 2.0", "saldo": 451000, "abonado": 200000, "ultimoAbono": "22/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 155, "cliente": "Diego Quiroga Shock", "saldo": 340000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 156, "cliente": "CRISTIAN ANTOVEZA FACA", "saldo": 500000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "10/06/2026", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 157, "cliente": "JADER SANCHEZ GASPER ROSAL", "saldo": 80000, "abonado": 365000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 158, "cliente": "FABIAN GROSS", "saldo": 335000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 159, "cliente": "MIGUEL MORBIDA", "saldo": 0, "abonado": 342000, "ultimoAbono": "04/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 160, "cliente": "JUAN CAMILO RODRIGUEZ BLACK FUNZA", "saldo": 501000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "11/06/2026", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 161, "cliente": "RICARDO SHOCK FACATATIVA", "saldo": 323000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 162, "cliente": "CRISTIAN MARQUEZ", "saldo": 320500, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 163, "cliente": "JHON TAFUR", "saldo": 317000, "abonado": 461325, "ultimoAbono": "25/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 164, "cliente": "POLLO CENTRO MAYOR", "saldo": 315000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 165, "cliente": "CRAYOLA ALTA GAMA", "saldo": 308000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 166, "cliente": "SEBASTIAN BENDITO TATTO", "saldo": 462000, "abonado": 580000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 167, "cliente": "CRISTIAN GARCIA", "saldo": 18000, "abonado": 290000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 168, "cliente": "OMAR CENTRO MAYOR", "saldo": 0, "abonado": 286000, "ultimoAbono": "25/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 169, "cliente": "TRUJILLO O", "saldo": 225000, "abonado": 479000, "ultimoAbono": "11/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 170, "cliente": "CAMILA RUBIANO GOLD", "saldo": 280000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 171, "cliente": "JUAN PABLO URREGO ART RUE", "saldo": 0, "abonado": 280000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 172, "cliente": "SANTIAGO LATINK", "saldo": 275000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 173, "cliente": "JUAN ZOMBIE - NO CREDITO", "saldo": 0, "abonado": 260000, "ultimoAbono": "24/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 174, "cliente": "DAVID ANDRES SICHACA RIVERA", "saldo": 259000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 175, "cliente": "CAMILO ALTA GAMMA", "saldo": 134500, "abonado": 316000, "ultimoAbono": "24/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 176, "cliente": "BRAYAN ALBERTO CODY FACA", "saldo": 255000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 177, "cliente": "YOAN DERMOLIE", "saldo": 252000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 178, "cliente": "STEFF SANABRIA ANIMAL TATTOO", "saldo": 250000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 179, "cliente": "JUAN SEBASTIAN CORREA SANDOVAL", "saldo": 153000, "abonado": 200000, "ultimoAbono": "22/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 180, "cliente": "MAICOL STIVEN VERA (MONO)", "saldo": 245000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 181, "cliente": "AURA HUERTAS", "saldo": 240000, "abonado": 240000, "ultimoAbono": "26/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 182, "cliente": "JORGE LUISK", "saldo": 0, "abonado": 460000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 183, "cliente": "ELIANA PRIETO BELTRAN CHILI TATTOO", "saldo": 233000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 184, "cliente": "MAURICIO PABON FACA", "saldo": 127000, "abonado": 195000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 185, "cliente": "OSCAR HERNANDEZ", "saldo": 155000, "abonado": 70000, "ultimoAbono": "22/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 186, "cliente": "SAMANTA HERNANDEZ THE GOLD", "saldo": 225000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 187, "cliente": "MARBIN SUBA", "saldo": 214000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 188, "cliente": "SERGIO DANIEL RUEDA OCTOPUS FACA", "saldo": 32000, "abonado": 205000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 189, "cliente": "JHON 85", "saldo": 201000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 190, "cliente": "STEVE TATTO DC", "saldo": 201000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 191, "cliente": "ILUNGA 1312", "saldo": 187000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 192, "cliente": "ALEJANDRO INK SICK", "saldo": 164000, "abonado": 360000, "ultimoAbono": "21/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 193, "cliente": "STIVEN BLANCO LUX", "saldo": 185000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 194, "cliente": "DENIS SEBASTIAN FACA", "saldo": 0, "abonado": 184000, "ultimoAbono": "25/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 195, "cliente": "LORENA DOCTOR TATTOO", "saldo": 182000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 196, "cliente": "ERICK SANTIAGO BARRIO ETERNI", "saldo": 176000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 197, "cliente": "FERNANDO BENDITO TATTO", "saldo": 169000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 198, "cliente": "ANGIE MARTINEZ GOLD TATTOO", "saldo": 169000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 199, "cliente": "MAURICIO GALERIAS", "saldo": 166000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 200, "cliente": "CAMILO DARK", "saldo": 25000, "abonado": 300000, "ultimoAbono": "10/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 201, "cliente": "DIEGO OCHOA - INFIERNO CARLOTA", "saldo": 162286, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 202, "cliente": "JULIO FAC", "saldo": 160000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 203, "cliente": "SEBASTIÁN RIVERA", "saldo": 160000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 204, "cliente": "CLIENTE VARIOS CAMIONETA", "saldo": 10000, "abonado": 13072000, "ultimoAbono": "24/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 205, "cliente": "JUAN DAVID OCHOA", "saldo": 290000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "11/06/2026", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 206, "cliente": "IVONNE BERNAL MORENO", "saldo": 156150, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 207, "cliente": "LAURA INK DARK", "saldo": 154500, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 208, "cliente": "ANDREW KENNEDY", "saldo": 0, "abonado": 150000, "ultimoAbono": "23/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 209, "cliente": "MARLON TATTO DC", "saldo": 147000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 210, "cliente": "JULIAN FLOREZ FUNZA", "saldo": 167000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "22/06/2026", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 211, "cliente": "OSCAR ESCOBAR", "saldo": 132000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 212, "cliente": "OSCAR ALARCON CHAZZ", "saldo": 114000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 213, "cliente": "SERGIO TRIDIMENSIONAL", "saldo": 0, "abonado": 267000, "ultimoAbono": "05/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 214, "cliente": "MONICA TATTO DC", "saldo": 110000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 215, "cliente": "LEONARDO RAMIREZ BENDITO", "saldo": 0, "abonado": 115000, "ultimoAbono": "03/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 216, "cliente": "MONT CARLOX", "saldo": 109000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 217, "cliente": "SOTOMAYOR CRISTIAN", "saldo": 0, "abonado": 105000, "ultimoAbono": "25/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 218, "cliente": "JUAN DIEGO OVALLE", "saldo": 105000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 219, "cliente": "JESUS SILENC", "saldo": 102000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 220, "cliente": "PAULA RODRIGUEZ LANDY", "saldo": 100000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 221, "cliente": "CARLOS ANDRES MORENO - FACA", "saldo": 30000, "abonado": 70000, "ultimoAbono": "23/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 222, "cliente": "CAMILO SHOWE", "saldo": 88000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 223, "cliente": "ANDRES FRANCO", "saldo": 75000, "abonado": 130000, "ultimoAbono": "23/07/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 224, "cliente": "GOLD HAND TATTO", "saldo": 84000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 225, "cliente": "JOHAN SEBASTIAN PEREZ MORBIDA", "saldo": 80000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 226, "cliente": "VALKIRIART", "saldo": 80000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 227, "cliente": "ALEXANDER CARNERO", "saldo": 80000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 228, "cliente": "JOSE LUIS BRIGHT", "saldo": 80000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 229, "cliente": "JUAN DANIEL", "saldo": 80000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 230, "cliente": "GABRIELA BAEZ HUERTAS QUIRIGUA", "saldo": 100000, "abonado": 60000, "ultimoAbono": "26/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 231, "cliente": "JORDY ALEXANDER DIAZ ROSA", "saldo": 79000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 232, "cliente": "DANIEL INK SOUL", "saldo": 77000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 233, "cliente": "ANGIE LISBOA PINK", "saldo": 75000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 234, "cliente": "MARCELA FUNZA", "saldo": 73000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 235, "cliente": "JUNIOR RODRIGUEZ HOLD HOUSE", "saldo": 72000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 236, "cliente": "SEBASTIAN RIVERA", "saldo": 70000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 237, "cliente": "PAOLA SIERRA - TATTOO PIERCING", "saldo": 70000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 238, "cliente": "ANDERSON HERRERA HERNANDEZ LUISK", "saldo": 562000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "11/07/2026", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 239, "cliente": "KAORY", "saldo": 524000, "abonado": 50000, "ultimoAbono": "09/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 240, "cliente": "ROBERT FACA", "saldo": 60000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 241, "cliente": "MARIA FERNANDA REYES MORBIDA", "saldo": 60000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 242, "cliente": "JUAN SEBASTIAN GARCIA LATINK", "saldo": 20000, "abonado": 40000, "ultimoAbono": "13/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 243, "cliente": "SAMANTA HERNANDEZ THE GOLD", "saldo": 54000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 244, "cliente": "WILL FACA", "saldo": 0, "abonado": 50000, "ultimoAbono": "22/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 245, "cliente": "FRANK MORBIDA", "saldo": 90000, "abonado": 55000, "ultimoAbono": "17/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 246, "cliente": "JUAN PARDO CARLOX", "saldo": 50000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 247, "cliente": "PABLO ANDRES SERRANO BETANCOURT", "saldo": 43000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 248, "cliente": "MIGUEL ANGEL ROSAS", "saldo": 35000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 249, "cliente": "EDWIN GONZALEZ ALTA", "saldo": 32000, "abonado": 680000, "ultimoAbono": "02/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 250, "cliente": "EDWAR GAITAN MORBIDA", "saldo": 0, "abonado": 30000, "ultimoAbono": "16/06/2026", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 251, "cliente": "MIGUEL TOVAR QUIRIGUA", "saldo": 15000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}, {"id": 252, "cliente": "ANGELICA INMORTAL", "saldo": 15000, "abonado": 0, "ultimoAbono": "", "ultimaCompra": "", "acuerdoFecha": "", "acuerdoNota": "", "observaciones": ""}];
@@ -709,11 +738,14 @@
         function cargarDatos() {
             aplicarPermisosVisuales();
 
-            const guardado = localStorage.getItem('cartera_db_v21');
+            const guardado = localStorage.getItem('cartera_db_v22');
             if (guardado) {
-                clientes = JSON.parse(guardado);
+                const parseado = JSON.parse(guardado);
+                clientes = parseado.clientes || parseado;
+                historialPlanillasCargadas = parseado.planillas || [];
             } else {
                 clientes = JSON.parse(JSON.stringify(baseInicial));
+                historialPlanillasCargadas = [];
             }
 
             renderTabla();
@@ -724,7 +756,8 @@
                 db.collection("cartera").doc("general").onSnapshot((doc) => {
                     if (doc.exists && doc.data().clientesData && doc.data().clientesData.length > 0) {
                         clientes = doc.data().clientesData;
-                        localStorage.setItem('cartera_db_v21', JSON.stringify(clientes));
+                        historialPlanillasCargadas = doc.data().historialPlanillas || [];
+                        localStorage.setItem('cartera_db_v22', JSON.stringify({ clientes, planillas: historialPlanillasCargadas }));
                         renderTabla();
                         actualizarMetricas();
                         renderizarTareasWidgetHoy();
@@ -738,10 +771,11 @@
         }
 
         function guardarEnNube() {
-            localStorage.setItem('cartera_db_v21', JSON.stringify(clientes));
+            localStorage.setItem('cartera_db_v22', JSON.stringify({ clientes, planillas: historialPlanillasCargadas }));
             if (db) {
                 db.collection("cartera").doc("general").set({
                     clientesData: clientes,
+                    historialPlanillas: historialPlanillasCargadas,
                     ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(err => console.log("Error sincronizando en nube:", err));
             }
@@ -751,12 +785,14 @@
             if (!esModoAdmin) return;
             if (confirm("⚠️ ¿Deseas restablecer la base de datos oficial completa ($145.845.538) y limpiar la Nube?")) {
                 clientes = JSON.parse(JSON.stringify(baseInicial));
-                for(let i=11; i<=21; i++) { localStorage.removeItem('cartera_db_v'+i); }
-                localStorage.setItem('cartera_db_v21', JSON.stringify(clientes));
+                historialPlanillasCargadas = [];
+                for(let i=11; i<=22; i++) { localStorage.removeItem('cartera_db_v'+i); }
+                localStorage.setItem('cartera_db_v22', JSON.stringify({ clientes, planillas: [] }));
 
                 if (db) {
                     db.collection("cartera").doc("general").set({
                         clientesData: clientes,
+                        historialPlanillas: [],
                         ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
                     }).then(() => {
                         alert("✅ Nube y memoria local restablecidas con éxito a la Cartera Oficial ($145.845.538).");
@@ -772,14 +808,35 @@
             }
         }
 
+        // LÓGICA MÓDULO BITÁCORA GLOBAL Y HISTORIAL DE PLANILLAS ADMIN
         function abrirModalBitacoraAdmin() {
             if (!esModoAdmin) return;
             renderizarTablaBitacoraGlobal();
+            renderizarTablaPlanillasGlobal();
             document.getElementById('modalBitacoraAdmin').classList.remove('hidden');
         }
 
         function cerrarModalBitacoraAdmin() {
             document.getElementById('modalBitacoraAdmin').classList.add('hidden');
+        }
+
+        function cambiarTabBitacora(modo) {
+            const btnM = document.getElementById('btnTabBitacoraMovs');
+            const btnP = document.getElementById('btnTabBitacoraPlanillas');
+            const secM = document.getElementById('secBitacoraMovs');
+            const secP = document.getElementById('secBitacoraPlanillas');
+
+            if (modo === 'MOVS') {
+                btnM.className = "w-1/2 py-2 border-b-2 border-purple-500 font-bold text-purple-400";
+                btnP.className = "w-1/2 py-2 border-b-2 border-transparent font-semibold text-slate-400 hover:text-white";
+                secM.classList.remove('hidden');
+                secP.classList.add('hidden');
+            } else {
+                btnP.className = "w-1/2 py-2 border-b-2 border-purple-500 font-bold text-purple-400";
+                btnM.className = "w-1/2 py-2 border-b-2 border-transparent font-semibold text-slate-400 hover:text-white";
+                secP.classList.remove('hidden');
+                secM.classList.add('hidden');
+            }
         }
 
         function renderizarTablaBitacoraGlobal() {
@@ -841,6 +898,29 @@
                     <td class="p-3 text-center">
                         ${m.imagenFactura ? `<button onclick="verImagenFacturaGenerico('${m.imagenFactura}')" class="bg-amber-600/30 hover:bg-amber-600 text-amber-300 px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"><i class="fa-solid fa-eye"></i> Ver</button>` : '<span class="text-slate-600">-</span>'}
                     </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarTablaPlanillasGlobal() {
+            const tbody = document.getElementById('tbodyPlanillasGlobal');
+            tbody.innerHTML = '';
+
+            if (!historialPlanillasCargadas || historialPlanillasCargadas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">No hay planillas de Excel cargadas en el historial.</td></tr>`;
+                return;
+            }
+
+            historialPlanillasCargadas.slice().reverse().forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-800/40 text-xs";
+                tr.innerHTML = `
+                    <td class="p-3 text-slate-400 font-semibold">${p.fechaCarga}</td>
+                    <td class="p-3 font-bold text-indigo-300"><i class="fa-solid fa-file-excel mr-1.5 text-emerald-400"></i>${p.nombreArchivo}</td>
+                    <td class="p-3 text-center font-bold text-white">${p.totalFilas} filas</td>
+                    <td class="p-3 text-center font-bold text-sky-400">${p.clientesCreados} nuevos</td>
+                    <td class="p-3 text-right font-extrabold text-emerald-400">${fmt(p.montoTotalMovilizado)}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1179,10 +1259,13 @@
             alert(`✅ Recibo procesado correctamente para ${c.cliente}. Nuevo saldo: ${fmt(c.saldo)}`);
         }
 
+        // IMPORTACIÓN MEJORADA DE 100% DE MOVIMIENTOS Y CREACIÓN DE CLIENTES EN VIVO
         function prepararPrevisualizacionExcel(event) {
             if (!esModoAdmin) { alert("Ingresa con tu clave de Administrador para importar planillas."); return; }
             const file = event.target.files[0];
             if (!file) return;
+
+            nombreArchivoExcelActual = file.name;
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1217,8 +1300,6 @@
                 if (colSaldoOficial === -1) colSaldoOficial = 1;
 
                 listaCambiosPendientesImportacion = [];
-                const mapClientes = {};
-                clientes.forEach(c => { mapClientes[c.cliente.toUpperCase().trim()] = c; });
 
                 for (let i = 1; i < jsonRows.length; i++) {
                     const row = jsonRows[i];
@@ -1230,14 +1311,10 @@
                     let normName = rawCliente.toUpperCase();
                     if (aliasMap[normName]) normName = aliasMap[normName].toUpperCase();
 
-                    let targetClient = mapClientes[normName];
+                    // BÚSQUEDA ROBUSTA DE COINCIDENCIA
+                    let targetClient = clientes.find(c => c.cliente.toUpperCase().trim() === normName);
                     if (!targetClient) {
-                        for (let k of Object.keys(mapClientes)) {
-                            if (k.startsWith(normName) || normName.startsWith(k)) {
-                                targetClient = mapClientes[k];
-                                break;
-                            }
-                        }
+                        targetClient = clientes.find(c => c.cliente.toUpperCase().trim().startsWith(normName) || normName.startsWith(c.cliente.toUpperCase().trim()));
                     }
 
                     let rawCompra = row[colCompra];
@@ -1274,8 +1351,10 @@
                     }
 
                     listaCambiosPendientesImportacion.push({
+                        filaIndex: i + 1,
                         clienteDetectado: rawCliente,
                         targetClient: targetClient,
+                        esNuevo: !targetClient,
                         saldoAnteriorApp: targetClient ? targetClient.saldo : 0,
                         compraNum: compraNum,
                         abonoNum: abonoNum,
@@ -1284,94 +1363,142 @@
                     });
                 }
 
-                const tbody = document.getElementById('tbodyPreviewImport');
-                tbody.innerHTML = '';
-
-                listaCambiosPendientesImportacion.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.className = "border-b border-slate-800/40";
-                    tr.innerHTML = `
-                        <td class="p-3 font-semibold text-white">${item.clienteDetectado}</td>
-                        <td class="p-3 font-bold ${item.targetClient ? 'text-indigo-400' : 'text-rose-400'}">
-                            ${item.targetClient ? item.targetClient.cliente : '❌ Sin coincidencia'}
-                        </td>
-                        <td class="p-3 text-right font-semibold text-slate-400">${fmt(item.saldoAnteriorApp)}</td>
-                        <td class="p-3 text-right font-bold text-amber-400">${item.compraNum > 0 ? fmt(item.compraNum) : '-'}</td>
-                        <td class="p-3 text-right font-bold text-emerald-400">${item.abonoNum > 0 ? fmt(item.abonoNum) : '-'}</td>
-                        <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoOficialPlanilla)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                document.getElementById('txtResumenPreview').innerText = `Se detectaron ${listaCambiosPendientesImportacion.length} registros en la planilla.`;
+                renderizarTablaPrevisualizacionImportacion();
                 document.getElementById('modalConfirmarImportacion').classList.remove('hidden');
             };
 
             reader.readAsArrayBuffer(file);
         }
 
+        function renderizarTablaPrevisualizacionImportacion() {
+            const tbody = document.getElementById('tbodyPreviewImport');
+            tbody.innerHTML = '';
+
+            let sinCoincidenciaCount = 0;
+
+            listaCambiosPendientesImportacion.forEach((item, index) => {
+                if (item.esNuevo) sinCoincidenciaCount++;
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-800/40";
+                tr.innerHTML = `
+                    <td class="p-3 text-slate-500 font-bold">#${item.filaIndex}</td>
+                    <td class="p-3 font-semibold text-white">${item.clienteDetectado}</td>
+                    <td class="p-3 font-bold ${item.targetClient ? 'text-indigo-400' : 'text-amber-400'}">
+                        ${item.targetClient ? item.targetClient.cliente : '✨ Cliente Nuevo (Se creará)'}
+                    </td>
+                    <td class="p-3 text-right font-semibold text-slate-400">${fmt(item.saldoAnteriorApp)}</td>
+                    <td class="p-3 text-right font-bold text-amber-400">${item.compraNum > 0 ? fmt(item.compraNum) : '-'}</td>
+                    <td class="p-3 text-right font-bold text-emerald-400">${item.abonoNum > 0 ? fmt(item.abonoNum) : '-'}</td>
+                    <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoOficialPlanilla)}</td>
+                    <td class="p-3 text-center">
+                        ${item.esNuevo ? `<span class="px-2 py-1 rounded bg-sky-500/20 text-sky-300 font-bold text-[10px]">✨ Auto-Crear</span>` : `<span class="text-emerald-400 font-bold">✓ Ok</span>`}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('txtResumenPreview').innerText = `Se detectaron los ${listaCambiosPendientesImportacion.length} movimientos de la planilla de Excel.`;
+            document.getElementById('txtDetalleDetectadosExcel').innerText = `${listaCambiosPendientesImportacion.length} movimientos procesados | ${sinCoincidenciaCount} clientes nuevos para auto-crear.`;
+        }
+
         function cerrarModalConfirmacion() {
             document.getElementById('modalConfirmarImportacion').classList.add('hidden');
         }
 
+        // APLICACIÓN OFICIAL CON CREACIÓN DE CLIENTES NUEVOS E HISTORIAL DE PLANILLAS
         function aplicarImportacionConfirmada() {
             cerrarModalConfirmacion();
 
             const tbodyFinal = document.getElementById('tbodyResumenFinal');
             tbodyFinal.innerHTML = '';
 
+            let clientesCreadosNuevosCount = 0;
+            let montoTotalMovilizadoPlanilla = 0;
+
             listaCambiosPendientesImportacion.forEach(item => {
-                if (item.targetClient) {
-                    const saldoAntApp = item.targetClient.saldo;
-                    const abonadoAnt = item.targetClient.abonado;
+                let target = item.targetClient;
 
-                    item.targetClient.saldo = item.saldoOficialPlanilla;
-
-                    if (!item.targetClient.historialMovimientos) item.targetClient.historialMovimientos = [];
-
-                    if (item.compraNum > 0) {
-                        if (item.fecha) item.targetClient.ultimaCompra = item.fecha;
-                        item.targetClient.historialMovimientos.push({
-                            id: Date.now() + Math.random(),
-                            tipo: "SOLO_COMPRA",
-                            montoCompra: item.compraNum,
-                            montoAbono: 0,
-                            saldoAnterior: saldoAntApp,
-                            saldoNuevo: item.saldoOficialPlanilla,
-                            abonadoAnterior: abonadoAnt,
-                            abonadoNuevo: item.targetClient.abonado,
-                            fecha: item.fecha || formatFechaObj(new Date()),
-                            detalle: "Planilla Excel: Nueva Compra"
-                        });
-                    }
-
-                    if (item.abonoNum > 0) {
-                        item.targetClient.abonado += item.abonoNum;
-                        if (item.fecha) item.targetClient.ultimoAbono = item.fecha;
-                        item.targetClient.historialMovimientos.push({
-                            id: Date.now() + Math.random() + 1,
-                            tipo: "SOLO_ABONO",
-                            montoCompra: 0,
-                            montoAbono: item.abonoNum,
-                            saldoAnterior: saldoAntApp,
-                            saldoNuevo: item.saldoOficialPlanilla,
-                            abonadoAnterior: abonadoAnt,
-                            abonadoNuevo: item.targetClient.abonado,
-                            fecha: item.fecha || formatFechaObj(new Date()),
-                            detalle: "Planilla Excel: Abono Recibido"
-                        });
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.className = "border-b border-slate-800/40";
-                    tr.innerHTML = `
-                        <td class="p-3 font-bold text-white">${item.targetClient.cliente}</td>
-                        <td class="p-3 text-right font-semibold text-slate-400">${fmt(saldoAntApp)}</td>
-                        <td class="p-3 text-right font-bold text-emerald-400">+C: ${fmt(item.compraNum)} | -A: ${fmt(item.abonoNum)}</td>
-                        <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoOficialPlanilla)}</td>
-                    `;
-                    tbodyFinal.appendChild(tr);
+                // CREACIÓN DE CLIENTE NUEVO EN CALIENTE
+                if (!target) {
+                    clientesCreadosNuevosCount++;
+                    const maxId = clientes.reduce((max, c) => c.id > max ? c.id : max, 0);
+                    target = {
+                        id: maxId + 1,
+                        cliente: item.clienteDetectado.toUpperCase().trim(),
+                        saldo: item.saldoOficialPlanilla,
+                        abonado: 0,
+                        ultimoAbono: "",
+                        ultimaCompra: "",
+                        acuerdoFecha: "",
+                        acuerdoNota: "",
+                        observaciones: "Creado desde Planilla de Excel"
+                    };
+                    clientes.push(target);
+                    item.targetClient = target;
                 }
+
+                const saldoAntApp = target.saldo;
+                const abonadoAnt = target.abonado;
+
+                target.saldo = item.saldoOficialPlanilla;
+                montoTotalMovilizadoPlanilla += (item.compraNum + item.abonoNum);
+
+                if (!target.historialMovimientos) target.historialMovimientos = [];
+
+                if (item.compraNum > 0) {
+                    if (item.fecha) target.ultimaCompra = item.fecha;
+                    target.historialMovimientos.push({
+                        id: Date.now() + Math.random(),
+                        tipo: "SOLO_COMPRA",
+                        montoCompra: item.compraNum,
+                        montoAbono: 0,
+                        saldoAnterior: saldoAntApp,
+                        saldoNuevo: item.saldoOficialPlanilla,
+                        abonadoAnterior: abonadoAnt,
+                        abonadoNuevo: target.abonado,
+                        fecha: item.fecha || formatFechaObj(new Date()),
+                        detalle: `Planilla (${nombreArchivoExcelActual}): Compra`
+                    });
+                }
+
+                if (item.abonoNum > 0) {
+                    target.abonado += item.abonoNum;
+                    if (item.fecha) target.ultimoAbono = item.fecha;
+                    target.historialMovimientos.push({
+                        id: Date.now() + Math.random() + 1,
+                        tipo: "SOLO_ABONO",
+                        montoCompra: 0,
+                        montoAbono: item.abonoNum,
+                        saldoAnterior: saldoAntApp,
+                        saldoNuevo: item.saldoOficialPlanilla,
+                        abonadoAnterior: abonadoAnt,
+                        abonadoNuevo: target.abonado,
+                        fecha: item.fecha || formatFechaObj(new Date()),
+                        detalle: `Planilla (${nombreArchivoExcelActual}): Abono`
+                    });
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-800/40";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-white">${target.cliente} ${item.esNuevo ? '<span class="text-[9px] bg-sky-500/20 text-sky-300 px-1 rounded">NUEVO</span>' : ''}</td>
+                    <td class="p-3 text-right font-semibold text-slate-400">${fmt(saldoAntApp)}</td>
+                    <td class="p-3 text-right font-bold text-emerald-400">+C: ${fmt(item.compraNum)} | -A: ${fmt(item.abonoNum)}</td>
+                    <td class="p-3 text-right font-extrabold text-amber-400">${fmt(item.saldoOficialPlanilla)}</td>
+                `;
+                tbodyFinal.appendChild(tr);
+            });
+
+            // GUARDAR HISTORIAL DE LA PLANILLA PROCESADA
+            if (!historialPlanillasCargadas) historialPlanillasCargadas = [];
+            historialPlanillasCargadas.push({
+                id: Date.now(),
+                fechaCarga: formatFechaObj(new Date()) + " " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                nombreArchivo: nombreArchivoExcelActual || "Planilla_Cargada.xlsx",
+                totalFilas: listaCambiosPendientesImportacion.length,
+                clientesCreados: clientesCreadosNuevosCount,
+                montoTotalMovilizado: montoTotalMovilizadoPlanilla
             });
 
             guardarEnNube();
@@ -1588,7 +1715,6 @@
             document.getElementById('modalVisorImagen').classList.add('hidden');
         }
 
-        // ELIMINACIÓN Y RECÁLCULO AUTOMÁTICO DE FECHAS EN LA TABLA GENERAL
         function eliminarMovimientoHistorial(movId) {
             if (!esModoAdmin) return;
             const c = clientes.find(item => item.id === clienteSeleccionadoId);
@@ -1605,7 +1731,6 @@
 
             if (confirm(`¿Seguro que deseas eliminar ÚNICAMENTE este registro de ${txtTipo}?`)) {
 
-                // 1. Revertir saldo y abonado
                 if (esCompra) {
                     c.saldo = Math.max(0, c.saldo - mov.montoCompra);
                 }
@@ -1614,10 +1739,8 @@
                     c.abonado = Math.max(0, c.abonado - mov.montoAbono);
                 }
 
-                // 2. Eliminar de la lista de historial
                 c.historialMovimientos.splice(idx, 1);
 
-                // 3. RECÁLCULO AUTOMÁTICO DE FECHAS EN TABLA GENERAL
                 if (esAbono) {
                     const abonosRestantes = c.historialMovimientos.filter(m => m.montoAbono > 0 || m.tipo === 'SOLO_ABONO' || m.tipo === 'ABONO_MANUAL');
                     if (abonosRestantes.length > 0) {
@@ -1732,7 +1855,6 @@
             cerrarModal();
         }
 
-        // EXPORTACIÓN NATIVA A EXCEL DE ALTA VELOCIDAD Y COMPATIBILIDAD SIN BLOQUEO DE URL
         function exportarExcelOficial() {
             try {
                 const dataExport = clientes.map(c => {
